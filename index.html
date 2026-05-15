@@ -2140,8 +2140,8 @@ function App(){
     }
 
     // Check badges
-    const newBadges=checkBadges({logs,daily,revEntries,studyHours,xp:rawXp,existing:badges});
-    if(newBadges.length!==badges.length){
+    const newBadges=checkBadges({logs,daily,revEntries,studyHours,xp:rawXp,existing:[]});
+    if(newBadges.length!==badges.length||newBadges.some(b=>!badges.includes(b))){
       setBadges(newBadges);
       try{localStorage.setItem('habitra_badges',JSON.stringify(newBadges));}catch(e){}
       // Show toast for new badge
