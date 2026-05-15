@@ -1402,122 +1402,152 @@ function TodayView({daily,logs,TK,toggleToday,revEntries,onRevToggle,todayDone,t
   return(
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
 
-      {/* ── TOP INFO STRIP: Gate + Study Hours ── */}
-      <div style={{background:'#FFFFFF',borderRadius:16,border:'1px solid #EDE8FB',
-        boxShadow:'0 1px 6px rgba(103,80,164,0.06)',overflow:'hidden'}}>
+      {/* ── COMBINED HERO CARD: Days Left + % Done + Study Hours + Quote ── */}
+      <div style={{borderRadius:22,overflow:'hidden',
+        boxShadow:'0 8px 28px rgba(103,80,164,0.22)'}}>
 
-        {/* Gate countdown row */}
-        <div style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px',
-          borderBottom:'1px solid #F0EAFE',
-          background:`linear-gradient(135deg,${gateColor}16,#FFFFFF 68%)`}}>
-          <div style={{width:48,height:48,borderRadius:15,
-            background:gateColor,display:'flex',alignItems:'center',
-            justifyContent:'center',flexShrink:0,boxShadow:`0 5px 16px ${gateColor}36`}}>
-            <span style={{fontSize:22,color:'#FFF',fontWeight:900,lineHeight:1}}>{gateCountdown}</span>
-          </div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:10,fontWeight:900,color:gateColor,letterSpacing:1.2,textTransform:'uppercase'}}>GATE Countdown</div>
-            <div style={{fontSize:20,fontWeight:900,color:gateColor,lineHeight:1.08}}>
-              {gateCountdown} days left
+        {/* Top gradient section: name + countdown + progress ring */}
+        <div style={{background:`linear-gradient(135deg,${gateColor} 0%,${P} 55%,${P2} 100%)`,
+          padding:'18px 18px 16px'}}>
+
+          {/* Name greeting */}
+          <div style={{marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.65)',letterSpacing:0.5}}>
+                {new Date().getHours()<12?'Good morning ☀️':new Date().getHours()<17?'Good afternoon 🌤️':'Good evening 🌙'} 👋
+              </div>
+              <div style={{fontSize:22,fontWeight:900,color:'#FFF',lineHeight:1.1,letterSpacing:0.2}}>
+                Ananya
+              </div>
+              <div style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.6)',marginTop:2,letterSpacing:0.3}}>
+                Electrical Engineering · Branch J
+              </div>
             </div>
-            <div style={{fontSize:10,color:gateColor,fontWeight:800,marginTop:3,lineHeight:1.35}}>
-              {gateCountdown<=30?'Final stretch - every session counts':gateCountdown<=90?'Serious prep window - protect today':'2027 govt job mission for your parents'} | Target: {gateDate}
+            <div style={{fontSize:9,fontWeight:700,color:'rgba(255,255,255,0.55)',textAlign:'right',lineHeight:1.6}}>
+              🎯 GATE 2027<br/>Mission
+            </div>
+          </div>
+
+          {/* Countdown pill + Progress ring row */}
+          <div style={{display:'flex',alignItems:'center',gap:14}}>
+            {/* Left: Days Left pill */}
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',
+              background:'rgba(255,255,255,0.15)',borderRadius:16,padding:'10px 14px',
+              flexShrink:0,backdropFilter:'blur(6px)',border:'1px solid rgba(255,255,255,0.22)',
+              minWidth:72}}>
+              <span style={{fontSize:28,fontWeight:900,color:'#FFF',lineHeight:1}}>{gateCountdown}</span>
+              <span style={{fontSize:9,fontWeight:800,color:'rgba(255,255,255,0.8)',
+                letterSpacing:1,textTransform:'uppercase',marginTop:2}}>days left</span>
+              <span style={{fontSize:8,fontWeight:700,color:'rgba(255,255,255,0.6)',marginTop:1}}>GATE</span>
+            </div>
+
+            {/* Right: Progress ring + status */}
+            <div style={{flex:1,display:'flex',alignItems:'center',gap:12}}>
+              <div style={{position:'relative',flexShrink:0}}>
+                <Ring pct={todayPct} size={78} color='rgba(255,255,255,0.9)'/>
+                <div style={{position:'absolute',top:'50%',left:'50%',
+                  transform:'translate(-50%,-50%)',textAlign:'center'}}>
+                  <div style={{fontSize:15,fontWeight:900,color:'#FFF',lineHeight:1}}>{todayPct}%</div>
+                  <div style={{fontSize:7,color:'rgba(255,255,255,0.7)',fontWeight:700}}>done</div>
+                </div>
+              </div>
+              <div style={{color:'#FFF',flex:1,minWidth:0}}>
+                <div style={{fontSize:18,fontWeight:900,lineHeight:1.2}}>
+                  {todayPct===100?'🎉 Perfect, Ananya!':todayDone===0?'Start strong!':todayDone+' done today'}
+                </div>
+                <div style={{fontSize:11,opacity:0.75,marginTop:3,lineHeight:1.4}}>
+                  {todayPct===100?'GATE discipline locked today':(daily.length-todayDone)+' left · '+dueEntries.length+' rev due'}
+                </div>
+                <div style={{display:'flex',gap:5,marginTop:7,flexWrap:'wrap'}}>
+                  <span style={{background:'rgba(255,255,255,0.18)',borderRadius:7,
+                    padding:'2px 8px',fontSize:10,fontWeight:700}}>🔥{bestStr}d</span>
+                  <span style={{background:'rgba(255,255,255,0.18)',borderRadius:7,
+                    padding:'2px 8px',fontSize:10,fontWeight:700}}>📊{avg30}%</span>
+                  <span style={{background:'rgba(255,255,255,0.18)',borderRadius:7,
+                    padding:'2px 8px',fontSize:10,fontWeight:700}}>
+                    {getLevel(xp)<=2?'🌱':getLevel(xp)<=4?'📖':getLevel(xp)<=6?'🎯':'🏆'}Lv{getLevel(xp)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* XP progress bar */}
+          <div style={{marginTop:12}}>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,
+              color:'rgba(255,255,255,0.6)',marginBottom:3}}>
+              <span>{getLevelName(xp)} · {xp} XP · {badges.length}/{ALL_BADGES.length} badges</span>
+              <span>{getLevelProgress(xp)}% → Lv{getLevel(xp)+1}</span>
+            </div>
+            <div style={{height:4,background:'rgba(255,255,255,0.2)',borderRadius:2,overflow:'hidden'}}>
+              <div style={{height:'100%',width:`${getLevelProgress(xp)}%`,
+                background:'rgba(255,255,255,0.85)',borderRadius:2,transition:'width 0.5s'}}/>
             </div>
           </div>
         </div>
 
-        {/* Study Hours row */}
-        <div style={{display:'flex',alignItems:'center',gap:12,padding:'11px 16px'}}>
-          <div style={{width:36,height:36,borderRadius:12,
-            background:'#E8F5E9',display:'flex',alignItems:'center',
-            justifyContent:'center',flexShrink:0}}>
-            <span style={{fontSize:18}}>📚</span>
-          </div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:10,fontWeight:700,color:'#9E94C0',letterSpacing:1,textTransform:'uppercase'}}>Study Time</div>
-            <div style={{display:'flex',gap:10,alignItems:'baseline',flexWrap:'wrap'}}>
-              <span style={{fontSize:16,fontWeight:900,color:'#2E7D32'}}>{todayHours}h</span>
-              <span style={{fontSize:11,color:'#81C784',fontWeight:600}}>today</span>
-              <span style={{fontSize:13,fontWeight:700,color:'#43A047'}}>{weekHours}h</span>
-              <span style={{fontSize:11,color:'#81C784',fontWeight:600}}>week</span>
-              <span style={{fontSize:12,fontWeight:600,color:'#66BB6A'}}>{Math.round(totalHours)}h</span>
-              <span style={{fontSize:11,color:'#81C784',fontWeight:500}}>total</span>
-            </div>
-          </div>
-          <button onClick={()=>setShowHoursInput(v=>!v)}
-            style={{background:showHoursInput?'#FFEBEE':'#E8F5E9',border:'none',
-              borderRadius:10,padding:'6px 12px',cursor:'pointer',color:showHoursInput?'#D32F2F':'#2E7D32',
-              fontSize:11,fontWeight:800,flexShrink:0,fontFamily:'Nunito,sans-serif'}}>
-            {showHoursInput?'Cancel':'Log'}
-          </button>
-        </div>
+        {/* Bottom white section: Study hours + Quote */}
+        <div style={{background:'#FFFFFF',border:'1px solid #EDE8FB',borderTop:'none'}}>
 
-        {showHoursInput&&(
-          <div style={{padding:'0 16px 12px',display:'flex',gap:8,alignItems:'center'}}>
-            <input type="number" min="0" max="24" step="0.5" value={hoursInput}
-              onChange={e=>setHoursInput(e.target.value)}
-              onKeyDown={e=>e.key==='Enter'&&logHours()}
-              autoFocus placeholder="e.g. 4.5"
-              style={{flex:1,border:'2px solid #A5D6A7',borderRadius:10,padding:'8px 12px',
-                fontSize:14,fontWeight:700,color:'#1B5E20',background:'#F1FAF1',outline:'none',
-                fontFamily:'Nunito,sans-serif'}}/>
-            <span style={{fontSize:12,color:'#388E3C',fontWeight:600}}>hours</span>
-            <button onClick={logHours}
-              style={{background:'#43A047',border:'none',borderRadius:10,padding:'8px 14px',
-                cursor:'pointer',color:'#FFF',fontWeight:800,fontSize:12,fontFamily:'Nunito,sans-serif'}}>
-              Save
+          {/* Study hours row */}
+          <div style={{display:'flex',alignItems:'center',gap:12,padding:'11px 16px',
+            borderBottom:'1px solid #F0EAFE'}}>
+            <div style={{width:34,height:34,borderRadius:11,
+              background:'#E8F5E9',display:'flex',alignItems:'center',
+              justifyContent:'center',flexShrink:0}}>
+              <span style={{fontSize:17}}>📚</span>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontWeight:800,color:'#9E94C0',letterSpacing:1,
+                textTransform:'uppercase',marginBottom:1}}>Study Time</div>
+              <div style={{display:'flex',gap:8,alignItems:'baseline',flexWrap:'wrap'}}>
+                <span style={{fontSize:15,fontWeight:900,color:'#2E7D32'}}>{todayHours}h</span>
+                <span style={{fontSize:10,color:'#81C784',fontWeight:600}}>today</span>
+                <span style={{fontSize:12,fontWeight:700,color:'#43A047'}}>{weekHours}h</span>
+                <span style={{fontSize:10,color:'#81C784',fontWeight:600}}>week</span>
+                <span style={{fontSize:11,fontWeight:600,color:'#66BB6A'}}>{Math.round(totalHours)}h</span>
+                <span style={{fontSize:10,color:'#81C784',fontWeight:500}}>total</span>
+              </div>
+            </div>
+            <button onClick={()=>setShowHoursInput(v=>!v)}
+              style={{background:showHoursInput?'#FFEBEE':'#E8F5E9',border:'none',
+                borderRadius:10,padding:'6px 12px',cursor:'pointer',
+                color:showHoursInput?'#D32F2F':'#2E7D32',
+                fontSize:11,fontWeight:800,flexShrink:0,fontFamily:'Nunito,sans-serif'}}>
+              {showHoursInput?'Cancel':'Log'}
             </button>
           </div>
-        )}
-      </div>
 
-      {/* ── HERO CARD: Progress + Stats + Quote ── */}
-      <div style={{background:`linear-gradient(135deg,${P} 0%,${P2} 100%)`,
-        borderRadius:20,padding:'18px 20px',
-        boxShadow:'0 6px 24px rgba(103,80,164,0.22)'}}>
-        <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:12}}>
-          <div style={{position:'relative',flexShrink:0}}>
-            <Ring pct={todayPct} size={88} color='#FFF'/>
-            <div style={{position:'absolute',top:'50%',left:'50%',
-              transform:'translate(-50%,-50%)',textAlign:'center'}}>
-              <div style={{fontSize:17,fontWeight:900,color:'#FFF',lineHeight:1}}>{todayPct}%</div>
+          {showHoursInput&&(
+            <div style={{padding:'10px 16px 12px',display:'flex',gap:8,alignItems:'center',
+              background:'#F9FFF9',borderBottom:'1px solid #F0EAFE'}}>
+              <input type="number" min="0" max="24" step="0.5" value={hoursInput}
+                onChange={e=>setHoursInput(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&logHours()}
+                autoFocus placeholder="e.g. 4.5"
+                style={{flex:1,border:'2px solid #A5D6A7',borderRadius:10,padding:'8px 12px',
+                  fontSize:14,fontWeight:700,color:'#1B5E20',background:'#F1FAF1',outline:'none',
+                  fontFamily:'Nunito,sans-serif'}}/>
+              <span style={{fontSize:12,color:'#388E3C',fontWeight:600}}>hrs</span>
+              <button onClick={logHours}
+                style={{background:'#43A047',border:'none',borderRadius:10,padding:'8px 14px',
+                  cursor:'pointer',color:'#FFF',fontWeight:800,fontSize:12,fontFamily:'Nunito,sans-serif'}}>
+                Save
+              </button>
             </div>
-          </div>
-          <div style={{color:'#FFF',flex:1}}>
-            <div style={{fontSize:22,fontWeight:900,lineHeight:1.2}}>
-              {todayPct===100?'🎉 Perfect, Ananya!':todayDone===0?'Ananya, start strong':todayDone+' done'}
+          )}
+
+          {/* Quote of the day */}
+          <div style={{padding:'12px 16px 14px',
+            background:`linear-gradient(135deg,${P}08,${P2}06)`}}>
+            <div style={{fontSize:9,fontWeight:800,color:P,letterSpacing:1.2,
+              textTransform:'uppercase',marginBottom:6}}>✨ Quote of the Day</div>
+            <div style={{fontSize:14,fontWeight:700,color:'#2D2040',
+              fontStyle:'italic',lineHeight:1.55,letterSpacing:0.1}}>
+              "{quote.q}"
             </div>
-            <div style={{fontSize:12,opacity:0.75,marginTop:2}}>
-              {todayPct===100?'GATE discipline locked today':(daily.length-todayDone)+' left · '+dueEntries.length+' rev due · GATE 2027'}
-            </div>
-            <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
-              <span style={{background:'rgba(255,255,255,0.18)',borderRadius:8,
-                padding:'3px 9px',fontSize:10,fontWeight:700}}>🔥 {bestStr}d</span>
-              <span style={{background:'rgba(255,255,255,0.18)',borderRadius:8,
-                padding:'3px 9px',fontSize:10,fontWeight:700}}>📊 {avg30}% / 30d</span>
-              <span style={{background:'rgba(255,255,255,0.18)',borderRadius:8,
-                padding:'3px 9px',fontSize:10,fontWeight:700}}>
-                {getLevel(xp)<=2?'🌱':getLevel(xp)<=4?'📖':getLevel(xp)<=6?'🎯':'🏆'} Lv{getLevel(xp)}
-              </span>
-            </div>
+            <div style={{fontSize:11,color:P,fontWeight:800,marginTop:5}}>— {quote.a}</div>
           </div>
-        </div>
-        <div style={{marginBottom:10}}>
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:9,
-            color:'rgba(255,255,255,0.6)',marginBottom:3}}>
-            <span>{getLevelName(xp)} · {xp} XP · {badges.length}/{ALL_BADGES.length} badges</span>
-            <span>{getLevelProgress(xp)}% → Lv{getLevel(xp)+1}</span>
-          </div>
-          <div style={{height:4,background:'rgba(255,255,255,0.2)',borderRadius:2,overflow:'hidden'}}>
-            <div style={{height:'100%',width:`${getLevelProgress(xp)}%`,
-              background:'rgba(255,255,255,0.85)',borderRadius:2,transition:'width 0.5s'}}/>
-          </div>
-        </div>
-        <div style={{borderTop:'1px solid rgba(255,255,255,0.15)',paddingTop:10}}>
-          <div style={{fontSize:11,color:'rgba(255,255,255,0.82)',fontStyle:'italic',lineHeight:1.5}}>
-            ✨ "{quote.q}"
-          </div>
-          <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',fontWeight:700,marginTop:2}}>— {quote.a}</div>
         </div>
       </div>
 
