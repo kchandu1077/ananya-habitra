@@ -373,15 +373,7 @@ const SEED_ENTRIES=[
   {id:'seed_6',subject:'Networks',topic:'',pages:'',dateStudied:'2026-05-01',notes:'',reviews:{'0':true,'3':null,'6':null,'30':null,'60':null,'90':null}},
 ];
 
-const freshData=()=>({
-  daily:['📖 Morning revision (1hr)','📝 PYQ practice','❌ Error log update',
-    '🏫 Coaching attendance','📚 Evening self-study (2hr)','💧 Drink 2L water',
-    '📵 No social media before study','🗣️ Teach-back 1 concept',
-    '📓 Short notes update','🌙 Sleep by 11pm'],
-  weekly:['📋 Full mock test','💪 Exercise 3x this week','🥗 Clean diet','🎯 Revise weak topics'],
-  logs:{},wlogs:{},
-  revEntries:SEED_ENTRIES,
-});
+const freshData=()=>({daily:[],weekly:[],logs:{},wlogs:{},revEntries:[]});
 
 const loadData=()=>{
   try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}
@@ -1928,10 +1920,13 @@ function SettingsView({daily,weekly,setDaily,setWeekly,setLogs,setRevEntries,
       <div style={{background:SUR,borderRadius:20,border:'2px solid #FFCDD2',
         padding:16,marginBottom:28,boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
         <button onClick={()=>{
-          if(window.confirm('⚠️ This deletes ALL data — habits, logs AND revision history.\n\nThis cannot be undone. Are you sure?')){
+          if(window.confirm('⚠️ This clears ALL your data — habits, logs, revisions, XP, badges and study hours.\n\nThis cannot be undone. Are you sure?')){
             const d=freshData();
             setDaily(d.daily);setWeekly(d.weekly);
             setLogs(d.logs);setWlogs(d.wlogs);setRevEntries(d.revEntries);
+            setXp(0);setBadges([]);setStudyHours({});
+            try{localStorage.removeItem(SK);localStorage.removeItem('habitra_xp');localStorage.removeItem('habitra_badges');localStorage.removeItem('habitra_study_hours');}catch(e){}
+            if(window.__FB_SAVE__)window.__FB_SAVE__({...d,xp:0,badges:[],studyHours:{}});
           }
         }} style={{display:'flex',alignItems:'center',gap:9,background:'#FFCDD2',
           border:'2px solid #EF9A9A',borderRadius:14,padding:'12px 16px',cursor:'pointer',
