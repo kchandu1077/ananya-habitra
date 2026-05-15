@@ -1406,7 +1406,7 @@ function TodayView({daily,logs,TK,toggleToday,revEntries,onRevToggle,todayDone,t
           <div style={{marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <div>
               <div style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.65)',letterSpacing:0.5}}>
-                {new Date().getHours()<12?'Good morning ☀️':new Date().getHours()<17?'Good afternoon 🌤️':'Good evening 🌙'} 👋
+                {(()=>{const h=new Date().getHours();return h>=5&&h<12?'Good morning ☀️':h>=12&&h<17?'Good afternoon 🌤️':h>=17&&h<21?'Good evening 🌙':'Good night 🌛';})()}{' '}👋
               </div>
               <div style={{fontSize:22,fontWeight:900,color:'#FFF',lineHeight:1.1,letterSpacing:0.2}}>
                 Ananya
