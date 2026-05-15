@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>HABITRA — Habit + Revision Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<meta name="theme-color" content="#6750A4"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HABITRA"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjc1MEE0Ii8+PHRleHQgeT0iNzUiIHg9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjcwIj7wn5a8PC90ZXh0Pjwvc3ZnPg=="/>
+<link rel="manifest" id="pwa-manifest-link"/>
+<script>
+// Inject PWA manifest dynamically
+(function(){
+  const manifest={name:'HABITRA — Habit & Revision Tracker',short_name:'HABITRA',
+    description:'Ananya GATE prep tracker for a 2027 government job goal',
+    start_url:window.location.href,display:'standalone',
+    orientation:'portrait',theme_color:'#6750A4',background_color:'#F6F0FF',
+    icons:[{src:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjc1MEE0Ii8+PHRleHQgeT0iNzUiIHg9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjcwIj7wn5a8PC90ZXh0Pjwvc3ZnPg==',
+      sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
+  const blob=new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
+  const url=URL.createObjectURL(blob);
+  document.getElementById('pwa-manifest-link').href=url;
+})();
+
+// Register Service Worker for push notifications
+if('serviceWorker' in navigator){
+  const swCode=`
+self.addEventListener('push',e=>{
+  const d=e.data?e.data.json():{};
+  self.registration.showNotification(d.title||'HABITRA',{
+    body:d.body||'Check your habits today!',
+    icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjc1MEE0Ii8+PHRleHQgeT0iNzUiIHg9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjcwIj7wn5a8PC90ZXh0Pjwvc3ZnPg==',
+    badge:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjc1MEE0Ii8+PHRleHQgeT0iNzUiIHg9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjcwIj7wn5a8PC90ZXh0Pjwvc3ZnPg==',
+    vibrate:[200,100,200],tag:'habitra-reminder'
+  });
+});
+self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.openWindow('/'));});
+self.addEventListener('message',e=>{
+  if(e.data&&e.data.type==='SCHEDULE_NOTIF'){
+    const now=new Date(),target=new Date();
+    const [h,m]=(e.data.time||'09:00').split(':').map(Number);
+    target.setHours(h,m,0,0);
+    if(target<=now)target.setDate(target.getDate()+1);
+    const delay=target-now;
+    setTimeout(()=>{
+      self.registration.showNotification('HABITRA ⏰',{
+        body:e.data.body||'Time to check your habits!',
+        icon:'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjNjc1MEE0Ii8+PHRleHQgeT0iNzUiIHg9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjcwIj7wn5a8PC90ZXh0Pjwvc3ZnPg==',
+        vibrate:[200,100,200],tag:'habitra-daily'
+      });
+    },delay);
+  }
+});
+`;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).then(reg=>{
+    window.__SW_REG__=reg;
+    console.log('SW registered');
+  }).catch(e=>console.log('SW reg failed',e));
+}
+</script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="module" id="fb-init">
+  import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import{getFirestore,doc,getDoc,setDoc}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const cfg={
+    apiKey:"AIzaSyD0N9mbeN88UNpHxbLf18oVvfhazz8CKIo",
+    authDomain:"ananya-habitra.firebaseapp.com",
+    projectId:"ananya-habitra",
+    storageBucket:"ananya-habitra.firebasestorage.app",
+    messagingSenderId:"3600054507",
+    appId:"1:3600054507:web:94f0a77295ea5ec02166ae"
+  };
+  const app=initializeApp(cfg);
+  const db=getFirestore(app);
+  const REF=doc(db,'habitra','ananya');
+  window.__FB_LOAD__=async()=>{
+    try{const s=await getDoc(REF);if(s.exists())return s.data();}catch(e){console.warn('FB load fail',e);}
+    return null;
+  };
+  window.__FB_SAVE__=async(data)=>{
+    try{await setDoc(REF,data);}catch(e){console.warn('FB save fail',e);}
+  };
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#F6F0FF}
+body{font-family:'Nunito','Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+#root{min-height:100vh}
+button,input,textarea,select{font-family:'Nunito','Segoe UI',sans-serif}
+*{-webkit-tap-highlight-color:transparent;outline:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#F0EAFE}
+::-webkit-scrollbar-thumb{background:#C4B5F4;border-radius:4px}
+.hbtn:active{transform:scale(0.96)}
+input[type="date"]{appearance:none;-webkit-appearance:none}
+body.dark{background:#1A1625}
+body.dark #root{background:#1A1625}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+.confetti-piece{position:fixed;width:10px;height:10px;top:-20px;z-index:9999;animation:confetti-fall 2.5s ease-in forwards;border-radius:2px;}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(103,80,164,0.4)}50%{box-shadow:0 0 0 12px rgba(103,80,164,0)}}
+/* ── MINIMALIST CARD SYSTEM ── */
+.card{background:#FFFFFF;border-radius:16px;border:1px solid #EDE8FB;box-shadow:0 1px 6px rgba(103,80,164,0.06);}
+.card-section{padding:14px 16px;}
+.section-label{font-size:10px;font-weight:800;color:#9E94C0;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px;}
+.strip{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #F0EAFE;}
+.strip:last-child{border-bottom:none;}
+.stat-pill{background:#F6F0FF;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:800;color:#6750A4;}
+.mini-tag{background:#EDE7FF;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:800;color:#7C4DFF;}
+.soft-btn{background:#F6F0FF;border:none;border-radius:10px;padding:7px 13px;font-size:12px;font-weight:800;color:#6750A4;cursor:pointer;font-family:'Nunito',sans-serif;transition:background 0.15s;}
+.soft-btn:hover{background:#EDE7FF;}
+.hab-row{display:flex;align-items:center;gap:11px;width:100%;padding:10px 14px;border-bottom:1px solid #F6F0FF;background:none;border-left:none;border-right:none;border-top:none;text-align:left;cursor:pointer;transition:background 0.12s;}
+.hab-row:last-child{border-bottom:none;}
+.hab-row:active{background:#F6F0FF;}
+.section-divider{height:1px;background:#F0EAFE;margin:2px 0;}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+/* ═══════════════════════════════════════════════════════
+   HABITRA MEGA — Habit Tracker + Spaced Revision System
+   ═══════════════════════════════════════════════════════ */
+
+const {useState,useEffect,useCallback,useMemo,useRef} = React;
+
+/* ── THEME ─────────────────────────────────────────── */
+let P='#6750A4',P2='#9C68FF',PC='#EADDFF',BG='#F6F0FF',SUR='#FFFFFF',
+      SV='#F0EAFE',OL='#E4DAFB',TX='#1C1B1F',TM='#49454F',TS='#79747E';
+
+const THEME_PALETTES={
+  classic:{
+    name:'Classic Focus',primary:'#6750A4',primary2:'#9C68FF',container:'#EADDFF',
+    bg:'#F6F0FF',surface:'#FFFFFF',surfaceVariant:'#F0EAFE',outline:'#E4DAFB',
+    habitColors:[
+      {bg:'#EDE7FF',f:'#7C4DFF',dk:'#21005D',lt:'#F5F0FF'},
+      {bg:'#FFF3E0',f:'#F57C00',dk:'#4A1800',lt:'#FFF9F0'},
+      {bg:'#E0F7FA',f:'#0097A7',dk:'#002B30',lt:'#F0FBFC'},
+      {bg:'#FCE4EC',f:'#C2185B',dk:'#4A0020',lt:'#FEF0F5'},
+      {bg:'#E8F5E9',f:'#388E3C',dk:'#1B4008',lt:'#F2FAF2'},
+      {bg:'#E3F2FD',f:'#1565C0',dk:'#001E3C',lt:'#EFF6FE'},
+    ]
+  },
+  sunrise:{
+    name:'Sunrise Multi',primary:'#E64A19',primary2:'#F9A825',container:'#FFE0B2',
+    bg:'#FFF7ED',surface:'#FFFFFF',surfaceVariant:'#FFF3E0',outline:'#FFD7A8',
+    habitColors:[
+      {bg:'#FFF3E0',f:'#F57C00',dk:'#4A1800',lt:'#FFF9F0'},
+      {bg:'#E0F7FA',f:'#0097A7',dk:'#002B30',lt:'#F0FBFC'},
+      {bg:'#FCE4EC',f:'#C2185B',dk:'#4A0020',lt:'#FEF0F5'},
+      {bg:'#E8F5E9',f:'#388E3C',dk:'#1B4008',lt:'#F2FAF2'},
+      {bg:'#EDE7FF',f:'#7C4DFF',dk:'#21005D',lt:'#F5F0FF'},
+      {bg:'#E3F2FD',f:'#1565C0',dk:'#001E3C',lt:'#EFF6FE'},
+    ]
+  },
+  ocean:{
+    name:'Ocean Pop',primary:'#00897B',primary2:'#1565C0',container:'#B2EBF2',
+    bg:'#F0FBFC',surface:'#FFFFFF',surfaceVariant:'#E0F7FA',outline:'#B2DFDB',
+    habitColors:[
+      {bg:'#E0F7FA',f:'#0097A7',dk:'#002B30',lt:'#F0FBFC'},
+      {bg:'#E3F2FD',f:'#1565C0',dk:'#001E3C',lt:'#EFF6FE'},
+      {bg:'#E8F5E9',f:'#388E3C',dk:'#1B4008',lt:'#F2FAF2'},
+      {bg:'#FFF3E0',f:'#F57C00',dk:'#4A1800',lt:'#FFF9F0'},
+      {bg:'#FCE4EC',f:'#C2185B',dk:'#4A0020',lt:'#FEF0F5'},
+      {bg:'#EDE7FF',f:'#7C4DFF',dk:'#21005D',lt:'#F5F0FF'},
+    ]
+  },
+  candy:{
+    name:'Candy Sprint',primary:'#C2185B',primary2:'#7C4DFF',container:'#F8BBD0',
+    bg:'#FFF5FA',surface:'#FFFFFF',surfaceVariant:'#FCE4EC',outline:'#F8BBD0',
+    habitColors:[
+      {bg:'#FCE4EC',f:'#C2185B',dk:'#4A0020',lt:'#FEF0F5'},
+      {bg:'#EDE7FF',f:'#7C4DFF',dk:'#21005D',lt:'#F5F0FF'},
+      {bg:'#E0F7FA',f:'#0097A7',dk:'#002B30',lt:'#F0FBFC'},
+      {bg:'#FFF3E0',f:'#F57C00',dk:'#4A1800',lt:'#FFF9F0'},
+      {bg:'#E8F5E9',f:'#388E3C',dk:'#1B4008',lt:'#F2FAF2'},
+      {bg:'#E3F2FD',f:'#1565C0',dk:'#001E3C',lt:'#EFF6FE'},
+    ]
+  }
+};
+
+let HCOLS=[
+  {bg:'#EDE7FF',f:'#7C4DFF',dk:'#21005D',lt:'#F5F0FF'},
+  {bg:'#FFF3E0',f:'#F57C00',dk:'#4A1800',lt:'#FFF9F0'},
+  {bg:'#E0F7FA',f:'#0097A7',dk:'#002B30',lt:'#F0FBFC'},
+  {bg:'#FCE4EC',f:'#C2185B',dk:'#4A0020',lt:'#FEF0F5'},
+  {bg:'#E8F5E9',f:'#388E3C',dk:'#1B4008',lt:'#F2FAF2'},
+  {bg:'#E3F2FD',f:'#1565C0',dk:'#001E3C',lt:'#EFF6FE'},
+];
+const hc=i=>HCOLS[i%6];
+function applyPalette(id){
+  const t=THEME_PALETTES[id]||THEME_PALETTES.classic;
+  P=t.primary;P2=t.primary2;PC=t.container;BG=t.bg;SUR=t.surface;SV=t.surfaceVariant;OL=t.outline;
+  HCOLS=t.habitColors;
+  try{document.querySelector('meta[name="theme-color"]')?.setAttribute('content',t.primary);}catch(e){}
+  return t;
+}
+
+const SUBJ_COLORS={
+  'Networks':'#7C4DFF','Machines':'#0097A7','Power Systems':'#388E3C','Control Systems':'#F57C00',
+  'Electromagnetics':'#C2185B','Analog Circuits':'#1565C0','Digital Circuits':'#00897B',
+  'Signals':'#6D4C41','Measurements':'#0288D1','Power Electronics':'#1976D2',
+  'Microprocessors':'#2E7D32','Electronics':'#F9A825','EDC':'#E64A19',
+  'Math':'#7B1FA2','Reasoning':'#455A64',
+};
+const subjColor=s=>SUBJ_COLORS[s]||'#6750A4';
+
+const GATE_SUBJECTS=['Networks','Machines','Power Systems','Control Systems','Electromagnetics','Analog Circuits',
+  'Digital Circuits','Signals','Measurements','Power Electronics','Microprocessors','Electronics','EDC','Math','Reasoning','Other'];
+
+const REV_INTERVALS=[0,3,6,30,60,90];
+const REV_LABELS={0:'Same Day',3:'3rd Day',6:'6th Day',30:'30th Day',60:'60th Day',90:'90th Day'};
+
+/* ── GAMIFICATION ─────────────────────────────────── */
+const XP_REWARDS={habit:5,allHabits:25,revision:10,studyHour:8,streak7:50,streak30:200,firstEntry:20};
+const LEVEL_THRESHOLDS=[0,100,250,500,900,1400,2100,3000,4200,5600,7500];
+const LEVEL_NAMES=['Rookie','Scholar','Studious','Diligent','Focused','Sharp','Expert','Master','Elite','Prodigy','Legend'];
+const getLevel=xp=>{let l=0;for(let i=0;i<LEVEL_THRESHOLDS.length;i++){if(xp>=LEVEL_THRESHOLDS[i])l=i;}return l;};
+const getLevelProgress=xp=>{const l=getLevel(xp);const cur=LEVEL_THRESHOLDS[l];const nxt=LEVEL_THRESHOLDS[l+1]||LEVEL_THRESHOLDS[l]+2000;return Math.round((xp-cur)/(nxt-cur)*100);};
+const getLevelName=xp=>LEVEL_NAMES[Math.min(getLevel(xp),LEVEL_NAMES.length-1)];
+const getLevelXpNeeded=xp=>{const l=getLevel(xp);return LEVEL_THRESHOLDS[l+1]||LEVEL_THRESHOLDS[l]+2000;};
+
+const ALL_BADGES=[
+  {id:'first_habit',icon:'🌱',name:'First Step',desc:'Complete your first habit'},
+  {id:'streak_3',icon:'🔥',name:'On Fire',desc:'3-day habit streak'},
+  {id:'streak_7',icon:'⚡',name:'7-Day Warrior',desc:'7-day streak on any habit'},
+  {id:'streak_30',icon:'💎',name:'Iron Will',desc:'30-day streak on any habit'},
+  {id:'perfect_day',icon:'⭐',name:'Perfect Day',desc:'Complete ALL habits in a day'},
+  {id:'perfect_week',icon:'🏆',name:'Perfect Week',desc:'100% habits for 7 days straight'},
+  {id:'first_revision',icon:'📚',name:'Revision Start',desc:'Complete first revision'},
+  {id:'rev_10',icon:'🎯',name:'Revision Pro',desc:'Complete 10 revision sessions'},
+  {id:'rev_50',icon:'🦁',name:'Revision Master',desc:'Complete 50 revision sessions'},
+  {id:'all_rev_done',icon:'✅',name:'Complete Cycle',desc:'Fully complete one entry (all 6 revisions)'},
+  {id:'hours_10',icon:'⏰',name:'10-Hour Club',desc:'Log 10 total study hours'},
+  {id:'hours_50',icon:'📖',name:'50-Hour Scholar',desc:'Log 50 total study hours'},
+  {id:'hours_100',icon:'🎓',name:'100-Hour Elite',desc:'Log 100 total study hours'},
+  {id:'level_5',icon:'🚀',name:'Level 5 Reached',desc:'Reach Scholar level 5'},
+  {id:'subjects_3',icon:'🧠',name:'Multi-Subject',desc:'Study 3+ different subjects'},
+  {id:'week_warrior',icon:'💪',name:'Week Warrior',desc:'Log study hours 7 days in a row'},
+];
+
+function checkBadges({logs,daily,revEntries,studyHours,xp,existing=[]}){
+  const earned=new Set(existing);
+  const today=todayStr();
+
+  // first_habit
+  const anyHabit=Object.values(logs).some(d=>Object.values(d).some(Boolean));
+  if(anyHabit)earned.add('first_habit');
+
+  // streak badges
+  const maxStreak=Math.max(0,...daily.map((_,i)=>getStreak(logs,i)));
+  if(maxStreak>=3)earned.add('streak_3');
+  if(maxStreak>=7)earned.add('streak_7');
+  if(maxStreak>=30)earned.add('streak_30');
+
+  // perfect_day
+  const hasPerfect=Object.keys(logs).some(k=>{
+    const d=logs[k]||{};return daily.length>0&&daily.every((_,i)=>d[i]);
+  });
+  if(hasPerfect)earned.add('perfect_day');
+
+  // perfect_week — 7 consecutive days all habits done
+  let consec=0;
+  for(let i=0;i<90;i++){
+    const dt=new Date();dt.setDate(dt.getDate()-i);
+    const k=dk(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    const done=daily.length>0&&daily.every((_,idx)=>(logs[k]||{})[idx]);
+    if(done)consec++;else break;
+  }
+  if(consec>=7)earned.add('perfect_week');
+
+  // revision badges
+  const completedRevs=revEntries.reduce((a,e)=>a+REV_INTERVALS.filter(iv=>e.reviews[String(iv)]===true).length,0);
+  if(completedRevs>=1)earned.add('first_revision');
+  if(completedRevs>=10)earned.add('rev_10');
+  if(completedRevs>=50)earned.add('rev_50');
+  if(revEntries.some(e=>REV_INTERVALS.every(iv=>e.reviews[String(iv)]===true)))earned.add('all_rev_done');
+
+  // hours badges
+  const totalH=Object.values(studyHours).reduce((a,b)=>a+b,0);
+  if(totalH>=10)earned.add('hours_10');
+  if(totalH>=50)earned.add('hours_50');
+  if(totalH>=100)earned.add('hours_100');
+
+  // level badge
+  if(getLevel(xp)>=5)earned.add('level_5');
+
+  // subjects badge
+  const subjSet=new Set(revEntries.map(e=>e.subject));
+  if(subjSet.size>=3)earned.add('subjects_3');
+
+  // week_warrior — 7 consecutive days with study hours logged
+  let hwk=0;
+  for(let i=0;i<30;i++){
+    const dt=new Date();dt.setDate(dt.getDate()-i);
+    const k=dk(dt.getFullYear(),dt.getMonth(),dt.getDate());
+    if(studyHours[k]>0)hwk++;else break;
+  }
+  if(hwk>=7)earned.add('week_warrior');
+
+  return [...earned];
+}
+
+/* ── WEAK TOPIC SUGGESTIONS ──────────────────────── */
+function getWeakSuggestions({revEntries,logs,daily,studyHours}){
+  const tips=[];
+
+  // Overdue revisions by subject
+  const overdueBySubj={};
+  revEntries.forEach(e=>{
+    REV_INTERVALS.forEach(iv=>{
+      if(isRevOverdue(e,iv)){overdueBySubj[e.subject]=(overdueBySubj[e.subject]||0)+1;}
+    });
+  });
+  Object.entries(overdueBySubj).sort((a,b)=>b[1]-a[1]).slice(0,3).forEach(([subj,cnt])=>{
+    tips.push({icon:'🔁',color:'#E65100',bg:'#FFF3E0',border:'#FFB74D',
+      msg:`${subj} has ${cnt} overdue revision${cnt>1?'s':''}`,
+      action:`Open Revisions → filter by ${subj}`,urgency:cnt>=3?'high':'med'});
+  });
+
+  // Low 14-day completion habits
+  daily.forEach((h,i)=>{
+    const rate=getRate(logs,i,14);
+    if(rate<50){
+      tips.push({icon:'📉',color:'#C62828',bg:'#FFEBEE',border:'#FFCDD2',
+        msg:`"${h}" — only ${rate}% done in last 2 weeks`,
+        action:'Focus on this habit tomorrow',urgency:rate<25?'high':'med'});
+    }
+  });
+
+  // No study hours logged today
+  const TK=todayStr();
+  if(!studyHours[TK]){
+    const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+    const yk=dk(yesterday.getFullYear(),yesterday.getMonth(),yesterday.getDate());
+    if(!studyHours[yk]){
+      tips.push({icon:'📚',color:'#1565C0',bg:'#E3F2FD',border:'#90CAF9',
+      msg:'No study hours logged today',action:'Go to Today -> tap Log to track time',urgency:'low'});
+    }
+  }
+
+  // Subjects with no recent study (last 7 days of revisions)
+  const recentSubjs=new Set();
+  const cutoff=addDays(todayStr(),-7);
+  revEntries.filter(e=>e.dateStudied>=cutoff).forEach(e=>recentSubjs.add(e.subject));
+  const allSubjs=[...new Set(revEntries.map(e=>e.subject))];
+  const neglected=allSubjs.filter(s=>!recentSubjs.has(s));
+  if(neglected.length>0){
+    tips.push({icon:'😴',color:'#7B1FA2',bg:'#F3E5F5',border:'#CE93D8',
+      msg:`${neglected.slice(0,2).join(', ')} — no new sessions in 7 days`,
+      action:'Consider adding a study session',urgency:'low'});
+  }
+
+  return tips.slice(0,5);
+}
+
+/* ── STORAGE ─────────────────────────────────────────*/
+const SK='habitra_mega_v1';
+const SEED_ENTRIES=[
+  {id:'seed_0',subject:'Networks',topic:'',pages:'',dateStudied:'2026-04-25',notes:'',reviews:{'0':true,'3':true,'6':true,'30':null,'60':null,'90':null}},
+  {id:'seed_1',subject:'Networks',topic:'',pages:'',dateStudied:'2026-04-26',notes:'',reviews:{'0':true,'3':true,'6':true,'30':null,'60':null,'90':null}},
+  {id:'seed_2',subject:'Networks',topic:'',pages:'',dateStudied:'2026-04-27',notes:'',reviews:{'0':true,'3':true,'6':null,'30':null,'60':null,'90':null}},
+  {id:'seed_3',subject:'Networks',topic:'',pages:'',dateStudied:'2026-04-28',notes:'',reviews:{'0':true,'3':true,'6':null,'30':null,'60':null,'90':null}},
+  {id:'seed_4',subject:'Networks',topic:'',pages:'',dateStudied:'2026-04-29',notes:'',reviews:{'0':true,'3':true,'6':null,'30':null,'60':null,'90':null}},
+  {id:'seed_5',subject:'Networks',topic:'',pages:'',dateStudied:'2026-04-30',notes:'',reviews:{'0':true,'3':true,'6':null,'30':null,'60':null,'90':null}},
+  {id:'seed_6',subject:'Networks',topic:'',pages:'',dateStudied:'2026-05-01',notes:'',reviews:{'0':true,'3':null,'6':null,'30':null,'60':null,'90':null}},
+];
+
+const freshData=()=>({
+  daily:['📖 Morning revision (1hr)','📝 PYQ practice','❌ Error log update',
+    '🏫 Coaching attendance','📚 Evening self-study (2hr)','💧 Drink 2L water',
+    '📵 No social media before study','🗣️ Teach-back 1 concept',
+    '📓 Short notes update','🌙 Sleep by 11pm'],
+  weekly:['📋 Full mock test','💪 Exercise 3x this week','🥗 Clean diet','🎯 Revise weak topics'],
+  logs:{},wlogs:{},
+  revEntries:SEED_ENTRIES,
+});
+
+const loadData=()=>{
+  try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch(e){}
+  return freshData();
+};
+const saveLocal=s=>{try{localStorage.setItem(SK,JSON.stringify(s));}catch(e){}};
+let _fbTimer=null;
+const saveData=(s)=>{
+  saveLocal(s);
+  if(window.__FB_SAVE__){
+    clearTimeout(_fbTimer);
+    _fbTimer=setTimeout(()=>window.__FB_SAVE__(s),1500);
+  }
+};
+
+/* ── DATE UTILS ──────────────────────────────────────*/
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const now2=()=>{const d=new Date();return{y:d.getFullYear(),m:d.getMonth(),d:d.getDate()};};
+const dk=(y,m,d)=>`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const todayStr=()=>{const t=now2();return dk(t.y,t.m,t.d);};
+const daysIn=(y,m)=>new Date(y,m+1,0).getDate();
+const addDays=(ds,n)=>{const d=new Date(ds);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
+const diffDays=(a,b)=>Math.round((new Date(a)-new Date(b))/86400000);
+const wkKey=(dt=new Date())=>{
+  const d=new Date(dt);d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+3-(d.getDay()+6)%7);
+  const w=new Date(d.getFullYear(),0,4);
+  return d.getFullYear()+'-W'+(1+Math.round(((d-w)/86400000-3+(w.getDay()+6)%7)/7));
+};
+const fmtDate=s=>{if(!s)return '';const d=new Date(s);return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ── HABIT STAT UTILS ────────────────────────────────*/
+const getStreak=(logs,idx)=>{
+  const t=new Date();let s=0;
+  for(let i=0;i<400;i++){
+    const d=new Date(t);d.setDate(d.getDate()-i);
+    if((logs[dk(d.getFullYear(),d.getMonth(),d.getDate())]||{})[idx])s++;else break;
+  }return s;
+};
+const getLongest=(logs,idx)=>{
+  const keys=Object.keys(logs).filter(k=>(logs[k]||{})[idx]).sort();
+  if(!keys.length)return 0;
+  let max=1,cur=1;
+  for(let i=1;i<keys.length;i++)
+    (new Date(keys[i])-new Date(keys[i-1]))/86400000===1?(cur++,max=Math.max(max,cur)):(cur=1);
+  return max;
+};
+const getRate=(logs,idx,days)=>{
+  let c=0;const t=new Date();
+  for(let i=0;i<days;i++){
+    const d=new Date(t);d.setDate(d.getDate()-i);
+    if((logs[dk(d.getFullYear(),d.getMonth(),d.getDate())]||{})[idx])c++;
+  }return Math.round(c/days*100);
+};
+
+/* ── REVISION UTILS ──────────────────────────────────*/
+const getRevDate=(entry,interval)=>addDays(entry.dateStudied,interval);
+const isRevDueToday=(entry,interval)=>{
+  const rd=getRevDate(entry,interval);
+  return rd===todayStr() && entry.reviews[String(interval)]===null;
+};
+const isRevOverdue=(entry,interval)=>{
+  const rd=getRevDate(entry,interval);
+  return rd<todayStr() && entry.reviews[String(interval)]===null;
+};
+const getEntryStatus=(entry)=>{
+  for(const iv of REV_INTERVALS){
+    if(entry.reviews[String(iv)]===null){
+      const rd=getRevDate(entry,iv);
+      if(rd<=todayStr())return 'due';
+    }
+  }
+  const allDone=REV_INTERVALS.every(iv=>entry.reviews[String(iv)]===true);
+  if(allDone)return 'complete';
+  return 'upcoming';
+};
+const getTodayDueEntries=(entries)=>entries.filter(e=>
+  REV_INTERVALS.some(iv=>isRevDueToday(e,iv)||isRevOverdue(e,iv))
+);
+
+/* ── HEATMAP COMPONENT ───────────────────────────── */
+function HeatmapGrid({logs,daily,weeks=15}){
+  const cells=useMemo(()=>{
+    const arr=[];
+    const today=new Date();
+    const totalDays=weeks*7;
+    // pad to start of week
+    const startDay=new Date(today);
+    startDay.setDate(startDay.getDate()-(totalDays-1));
+    const dow=startDay.getDay();
+    const padded=[];
+    for(let i=0;i<dow;i++)padded.push(null);
+    for(let i=0;i<totalDays;i++){
+      const d=new Date(startDay);d.setDate(startDay.getDate()+i);
+      const k=dk(d.getFullYear(),d.getMonth(),d.getDate());
+      const done=daily.length?daily.filter((_,idx)=>(logs[k]||{})[idx]).length:0;
+      const pct=daily.length?done/daily.length:0;
+      padded.push({k,pct,done,total:daily.length,d:new Date(d)});
+    }
+    return padded;
+  },[logs,daily,weeks]);
+
+  const cols=useMemo(()=>{
+    const cols=[];
+    for(let c=0;c<Math.ceil(cells.length/7);c++){
+      cols.push(cells.slice(c*7,(c+1)*7));
+    }
+    return cols;
+  },[cells]);
+
+  const cellColor=pct=>{
+    if(pct===0)return '#EDE7FF';
+    if(pct<0.4)return '#C4B5F4';
+    if(pct<0.7)return P2;
+    if(pct<1)return P;
+    return '#2E7D32';
+  };
+
+  return(
+    <div style={{overflowX:'auto',paddingBottom:4}}>
+      <div style={{display:'flex',gap:2,minWidth:'fit-content'}}>
+        {cols.map((col,ci)=>(
+          <div key={ci} style={{display:'flex',flexDirection:'column',gap:2}}>
+            {col.map((cell,ri)=>cell===null?(
+              <div key={ri} style={{width:10,height:10}}/>
+            ):(
+              <div key={ri} title={`${cell.d.toDateString()}: ${cell.done}/${cell.total} habits`}
+                style={{width:10,height:10,borderRadius:2,
+                  background:cellColor(cell.pct),
+                  opacity:cell.d>new Date()?0.2:1}}/>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:4,marginTop:7,justifyContent:'flex-end'}}>
+        <span style={{fontSize:9,color:'#79747E'}}>Less</span>
+        {[0,0.3,0.6,0.9,1].map(p=>(
+          <div key={p} style={{width:10,height:10,borderRadius:2,background:cellColor(p)}}/>
+        ))}
+        <span style={{fontSize:9,color:'#79747E'}}>More</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── GAMIFICATION VIEW ───────────────────────────── */
+function GamificationView({xp,badges,daily,logs,revEntries,studyHours}){
+  const level=getLevel(xp);
+  const levelName=getLevelName(xp);
+  const progress=getLevelProgress(xp);
+  const xpNeeded=getLevelXpNeeded(xp);
+  const earnedSet=new Set(badges);
+
+  // XP breakdown for this week
+  const weekXp=useMemo(()=>{
+    let total=0;
+    for(let i=0;i<7;i++){
+      const d=new Date();d.setDate(d.getDate()-i);
+      const k=dk(d.getFullYear(),d.getMonth(),d.getDate());
+      const done=daily.filter((_,idx)=>(logs[k]||{})[idx]).length;
+      total+=done*XP_REWARDS.habit;
+      if(daily.length>0&&done===daily.length)total+=XP_REWARDS.allHabits;
+      if(studyHours[k])total+=Math.floor(studyHours[k])*XP_REWARDS.studyHour;
+    }
+    return total;
+  },[logs,daily,studyHours]);
+
+  return(
+    <div>
+      {/* Level Card */}
+      <div style={{background:`linear-gradient(135deg,${P},${P2})`,
+        borderRadius:24,padding:'20px',marginBottom:14,
+        boxShadow:'0 8px 28px rgba(103,80,164,0.35)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:14}}>
+          <div style={{width:64,height:64,borderRadius:20,
+            background:'rgba(255,255,255,0.2)',
+            border:'3px solid rgba(255,255,255,0.5)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            flexShrink:0}}>
+            <span style={{fontSize:28}}>
+              {level<=2?'🌱':level<=4?'📖':level<=6?'🎯':level<=8?'🦁':'🏆'}
+            </span>
+          </div>
+          <div style={{flex:1,color:'#FFF'}}>
+            <div style={{fontSize:11,opacity:0.75,letterSpacing:1,fontWeight:700}}>LEVEL {level}</div>
+            <div style={{fontSize:22,fontWeight:900,lineHeight:1}}>{levelName}</div>
+            <div style={{fontSize:11,opacity:0.8,marginTop:3}}>{xp} / {xpNeeded} XP</div>
+          </div>
+          <div style={{textAlign:'right',color:'#FFF'}}>
+            <div style={{fontSize:11,opacity:0.7}}>This week</div>
+            <div style={{fontSize:20,fontWeight:900}}>+{weekXp}</div>
+            <div style={{fontSize:10,opacity:0.7}}>XP earned</div>
+          </div>
+        </div>
+        <div style={{marginTop:14}}>
+          <div style={{display:'flex',justifyContent:'space-between',
+            fontSize:10,color:'rgba(255,255,255,0.7)',marginBottom:4}}>
+            <span>Level {level}</span>
+            <span>{progress}% → Level {level+1}</span>
+          </div>
+          <div style={{height:8,background:'rgba(255,255,255,0.2)',borderRadius:4,overflow:'hidden'}}>
+            <div style={{height:'100%',width:`${progress}%`,
+              background:'rgba(255,255,255,0.9)',borderRadius:4,
+              transition:'width 0.6s ease'}}/>
+          </div>
+        </div>
+      </div>
+
+      {/* XP Source Guide */}
+      <div style={{background:'#FFFFFF',border:'1px solid #E4DAFB',borderRadius:18,
+        padding:'14px',marginBottom:14,boxShadow:'0 1px 4px rgba(103,80,164,0.07)'}}>
+        <div style={{fontSize:12,fontWeight:800,color:'#6750A4',marginBottom:10,letterSpacing:0.5}}>⚡ HOW TO EARN XP</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
+          {[
+            ['✅ Each habit done','5 XP'],['🌟 All habits done','25 XP'],
+            ['📚 Revision done','10 XP'],['⏰ Per study hour','8 XP'],
+            ['🔥 7-day streak','50 XP'],['💎 30-day streak','200 XP'],
+          ].map(([label,val])=>(
+            <div key={label} style={{background:'#F6F0FF',borderRadius:10,
+              padding:'8px 10px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontSize:11,fontWeight:600,color:'#49454F'}}>{label}</span>
+              <span style={{fontSize:12,fontWeight:900,color:'#6750A4'}}>{val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div style={{fontSize:13,fontWeight:800,color:'#1C1B1F',marginBottom:10}}>
+        🏅 Badges — {earnedSet.size}/{ALL_BADGES.length} earned
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9,marginBottom:14}}>
+        {ALL_BADGES.map(b=>{
+          const earned=earnedSet.has(b.id);
+          return(
+            <div key={b.id} style={{background:earned?'#FFFFFF':'#F6F0FF',
+              border:`2px solid ${earned?'#C4B5F4':'#E4DAFB'}`,
+              borderRadius:16,padding:'11px 12px',
+              opacity:earned?1:0.55,
+              boxShadow:earned?'0 2px 10px rgba(103,80,164,0.12)':'none',
+              transition:'all 0.2s'}}>
+              <div style={{fontSize:22,marginBottom:5}}>{b.icon}</div>
+              <div style={{fontSize:12,fontWeight:800,color:earned?'#1C1B1F':'#79747E'}}>{b.name}</div>
+              <div style={{fontSize:10,color:'#79747E',marginTop:2,lineHeight:1.4}}>{b.desc}</div>
+              {earned&&<div style={{fontSize:9,color:'#6750A4',fontWeight:800,marginTop:4}}>✓ EARNED</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── SUGGESTIONS CARD ────────────────────────────── */
+function SuggestionsCard({suggestions}){
+  const [open,setOpen]=useState(false);
+  if(!suggestions.length)return null;
+  return(
+    <div style={{background:'#FFFFFF',border:'2px solid #E4DAFB',
+      borderRadius:20,padding:'13px',marginBottom:12,
+      boxShadow:'0 2px 12px rgba(103,80,164,0.1)'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+        marginBottom:open?10:0}}>
+        <div style={{fontSize:13,fontWeight:900,color:'#6750A4',display:'flex',gap:6,alignItems:'center'}}>
+          💡 Smart Suggestions
+          <span style={{background:'#EDE7FF',color:'#6750A4',fontSize:10,fontWeight:800,
+            padding:'2px 7px',borderRadius:10}}>{suggestions.length}</span>
+        </div>
+        <button onClick={()=>setOpen(v=>!v)}
+          style={{background:'#F0EAFE',border:'none',borderRadius:10,
+            padding:'4px 10px',cursor:'pointer',fontSize:11,fontWeight:700,color:'#6750A4',
+            fontFamily:'Nunito,sans-serif'}}>
+          {open?'Hide':'Show'}
+        </button>
+      </div>
+      {open&&suggestions.map((s,i)=>(
+        <div key={i} style={{background:s.bg,border:`1px solid ${s.border}`,
+          borderRadius:13,padding:'10px 12px',marginBottom:7,
+          display:'flex',gap:9,alignItems:'flex-start'}}>
+          <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{s.icon}</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,fontWeight:700,color:s.color,lineHeight:1.4}}>{s.msg}</div>
+            <div style={{fontSize:10,color:'#79747E',marginTop:3}}>👉 {s.action}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── PUSH NOTIFICATION HELPER ───────────────────── */
+async function requestNotifPermission(){
+  if(!('Notification' in window))return false;
+  if(Notification.permission==='granted')return true;
+  const perm=await Notification.requestPermission();
+  return perm==='granted';
+}
+function scheduleNotif(time,body){
+  if(!window.__SW_REG__)return;
+  window.__SW_REG__.active?.postMessage({type:'SCHEDULE_NOTIF',time,body});
+}
+
+
+const Ico=({d,s=20,c='currentColor',sw=2,fill='none'})=>(
+  <svg width={s} height={s} viewBox="0 0 24 24" fill={fill} stroke={c}
+    strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+    {Array.isArray(d)?d.map((p,i)=><path key={i} d={p}/>):<path d={d}/>}
+  </svg>
+);
+const IC={
+  home:['M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z','M9 22V12h6v10'],
+  book:['M4 19.5A2.5 2.5 0 016.5 17H20','M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z'],
+  bar:['M18 20V10','M12 20V4','M6 20v-6'],
+  gear:['M12 15a3 3 0 100-6 3 3 0 000 6z','M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z'],
+  plus:['M12 5v14','M5 12h14'],
+  check:'M20 6L9 17l-5-5',
+  x:'M18 6L6 18M6 6l12 12',
+  edit:['M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7','M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z'],
+  trash:['M3 6h18','M8 6V4h8v2','M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6'],
+  up:'M18 15l-6-6-6 6',
+  down:'M6 9l6 6 6-6',
+  dl:['M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4','M7 10l5 5 5-5','M12 15V3'],
+  ul:['M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4','M17 8l-5-5-5 5','M12 3v12'],
+  copy:['M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1','M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2'],
+  flame:'M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 3z',
+  warn:['M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z','M12 9v4','M12 17h.01'],
+  paste:['M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2','M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2','M12 12v6','M9 15h6'],
+  bell:'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0',
+  clock:'M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 6v6l4 2',
+  chevL:'M15 18l-6-6 6-6',
+  chevR:'M9 18l6-6-6-6',
+  search:['M11 19a8 8 0 100-16 8 8 0 000 16z','M21 21l-4.35-4.35'],
+  filter:['M22 3H2l8 9.46V19l4 2v-8.54L22 3'],
+};
+
+/* ── GATE QUOTES ────────────────────────────────────*/
+const GATE_QUOTES=[
+  {q:"Ananya, every honest study day is a step toward your GATE rank and the career you deserve.",a:"HABITRA"},
+  {q:"GATE reward the student who returns tomorrow and does the work again.",a:"HABITRA"},
+  {q:"A 2027 government job is built from today's revision, today's PYQ, and today's discipline.",a:"HABITRA"},
+  {q:"Study like your parents' pride is waiting at the finish line.",a:"HABITRA"},
+  {q:"Success is the sum of small efforts repeated day in and day out.",a:"Robert Collier"},
+  {q:"The secret of getting ahead is getting started.",a:"Mark Twain"},
+  {q:"Don't watch the clock; do what it does. Keep going.",a:"Sam Levenson"},
+  {q:"Hard work beats talent when talent doesn't work hard.",a:"Tim Notke"},
+  {q:"Your future is created by what you do today, not tomorrow.",a:"Robert Kiyosaki"},
+  {q:"Focus on being productive instead of busy.",a:"Tim Ferriss"},
+  {q:"The expert in anything was once a beginner.",a:"Helen Hayes"},
+  {q:"Dream big. Start small. Act now.",a:"Robin Sharma"},
+  {q:"Consistency is the key to achieving and maintaining momentum.",a:"Darren Hardy"},
+  {q:"One day or day one. You decide.",a:"Paulo Coelho"},
+  {q:"The pain of discipline is far less than the pain of regret.",a:"Sarah Bombell"},
+  {q:"You don't have to be great to start, but you have to start to be great.",a:"Zig Ziglar"},
+  {q:"GATE is not just an exam — it's a test of your consistency.",a:"HABITRA"},
+  {q:"Revise today what you studied yesterday. That's how toppers think.",a:"HABITRA"},
+  {q:"Every topic you master today is one less worry on exam day.",a:"HABITRA"},
+  {q:"Small daily improvements lead to stunning long-term results.",a:"Robin Sharma"},
+];
+const todayQuote=()=>{
+  const d=new Date();
+  const idx=(d.getFullYear()*10000+d.getMonth()*100+d.getDate())%GATE_QUOTES.length;
+  return GATE_QUOTES[idx];
+};
+
+/* ── CONFETTI ────────────────────────────────────────*/
+const fireConfetti=()=>{
+  const colors=['#7C4DFF','#FFB74D','#43A047','#0097A7','#C2185B','#F9A825','#FF5722'];
+  const container=document.body;
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left=Math.random()*100+'vw';
+    el.style.background=colors[Math.floor(Math.random()*colors.length)];
+    el.style.width=(Math.random()*8+6)+'px';
+    el.style.height=(Math.random()*8+6)+'px';
+    el.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    el.style.animationDelay=(Math.random()*1.5)+'s';
+    el.style.animationDuration=(Math.random()*1.5+2)+'s';
+    container.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+  }
+};
+
+/* ── SHARED COMPONENTS ───────────────────────────────*/
+const Ring=({pct,size=100,color='#7C4DFF'})=>{
+  const r=42,cx=55,cy=55,circ=2*Math.PI*r;
+  return(
+    <svg width={size} height={size} viewBox="0 0 110 110">
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={9}/>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={9}
+        strokeDasharray={circ} strokeDashoffset={circ-(pct/100)*circ}
+        strokeLinecap="round" transform={`rotate(-90 ${cx} ${cy})`}
+        style={{transition:'stroke-dashoffset 0.5s ease'}}/>
+    </svg>
+  );
+};
+const SH=({ch})=>(
+  <div style={{fontSize:10,fontWeight:700,color:'#9E9E9E',letterSpacing:1.5,
+    textTransform:'uppercase',marginBottom:8,paddingLeft:2}}>{ch}</div>
+);
+const IB=({ch,onClick,dis=false,bg=SV})=>(
+  <button onClick={!dis?onClick:undefined}
+    style={{width:30,height:30,borderRadius:9,background:bg,border:'none',
+      cursor:dis?'default':'pointer',display:'flex',alignItems:'center',
+      justifyContent:'center',opacity:dis?0.28:1,flexShrink:0}}>
+    {ch}
+  </button>
+);
+const Chip=({label,color,small=false})=>(
+  <span style={{background:color+'22',color,border:`1px solid ${color}44`,
+    borderRadius:20,padding:small?'1px 7px':'2px 9px',
+    fontSize:small?9:11,fontWeight:700,flexShrink:0,whiteSpace:'nowrap'}}>
+    {label}
+  </span>
+);
+const BSModal=({children,onClose})=>(
+  <div onClick={onClose}
+    style={{position:'fixed',inset:0,background:'rgba(28,27,31,0.55)',
+      display:'flex',alignItems:'flex-end',justifyContent:'center',
+      zIndex:50,backdropFilter:'blur(4px)'}}>
+    <div onClick={e=>e.stopPropagation()}
+      style={{background:SUR,borderRadius:'26px 26px 0 0',
+        padding:'10px 18px 36px',width:'100%',maxWidth:500,
+        boxShadow:'0 -8px 36px rgba(103,80,164,0.18)',
+        maxHeight:'90vh',overflowY:'auto'}}>
+      <div style={{width:34,height:4,borderRadius:2,background:OL,margin:'0 auto 16px'}}/>
+      {children}
+    </div>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════
+   REVISION MODULE COMPONENTS
+   ═══════════════════════════════════════════════════ */
+
+/* ── RevisionCard ────────────────────────────────────*/
+function RevisionCard({entry,onToggle,onDelete,compact=false}){
+  const [open,setOpen]=useState(false);
+  const col=subjColor(entry.subject);
+  const status=getEntryStatus(entry);
+  const hasDue=REV_INTERVALS.some(iv=>isRevDueToday(entry,iv)||isRevOverdue(entry,iv));
+  const hasOverdue=REV_INTERVALS.some(iv=>isRevOverdue(entry,iv));
+
+  return(
+    <div style={{background:SUR,borderRadius:18,border:`1px solid ${hasDue?col+'55':OL}`,
+      marginBottom:9,boxShadow:hasDue?`0 2px 12px ${col}22`:'0 1px 4px rgba(103,80,164,0.07)',
+      overflow:'hidden'}}>
+      <button onClick={()=>setOpen(v=>!v)}
+        style={{display:'flex',alignItems:'center',gap:10,width:'100%',
+          padding:'12px 14px',background:'none',border:'none',
+          textAlign:'left',cursor:'pointer'}}>
+        <div style={{width:36,height:36,borderRadius:12,background:col+'22',
+          display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          <span style={{fontSize:12,fontWeight:900,color:col}}>{entry.subject.slice(0,3)}</span>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+            <span style={{fontSize:13,fontWeight:700,color:TX}}>{entry.subject}</span>
+            {entry.topic&&<span style={{fontSize:11,color:TS,fontWeight:500}}>· {entry.topic}</span>}
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:6,marginTop:2,flexWrap:'wrap'}}>
+            <span style={{fontSize:10,color:TS}}>{fmtDate(entry.dateStudied)}</span>
+            {entry.pages&&<span style={{fontSize:10,color:TS}}>· pp.{entry.pages}</span>}
+            {hasOverdue&&<Chip label="OVERDUE" color='#C62828' small/>}
+            {!hasOverdue&&hasDue&&<Chip label="DUE TODAY" color='#E65100' small/>}
+            {status==='complete'&&<Chip label="✓ COMPLETE" color='#388E3C' small/>}
+          </div>
+        </div>
+        <Ico d={open?IC.up:IC.down} s={16} c={TS}/>
+      </button>
+
+      {open&&(
+        <div style={{padding:'0 14px 14px'}}>
+          {/* interval progress */}
+          <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:10}}>
+            {REV_INTERVALS.map(iv=>{
+              const rd=getRevDate(entry,iv);
+              const val=entry.reviews[String(iv)];
+              const due=isRevDueToday(entry,iv);
+              const over=isRevOverdue(entry,iv);
+              const done=val===true;
+              const bg=done?'#E8F5E9':over?'#FFEBEE':due?'#FFF3E0':SV;
+              const border=done?'#43A047':over?'#EF9A9A':due?'#FFB74D':OL;
+              const tc=done?'#2E7D32':over?'#C62828':due?'#E65100':TS;
+              return(
+                <button key={iv} onClick={()=>onToggle(entry.id,iv)}
+                  style={{background:bg,border:`2px solid ${border}`,
+                    borderRadius:12,padding:'6px 10px',cursor:'pointer',
+                    textAlign:'center',minWidth:62,transition:'all 0.15s',
+                    fontFamily:'Nunito,sans-serif'}}>
+                  <div style={{fontSize:10,fontWeight:700,color:tc}}>{REV_LABELS[iv]}</div>
+                  <div style={{fontSize:9,color:tc,marginTop:1,opacity:0.8}}>{fmtDate(rd)}</div>
+                  <div style={{fontSize:11,fontWeight:800,marginTop:2,
+                    color:done?'#2E7D32':over?'#C62828':due?'#E65100':'#BDBDBD'}}>
+                    {done?'✓':over?'!':due?'→':'○'}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {/* completion bar */}
+          <div style={{height:4,background:OL,borderRadius:2,marginBottom:10,overflow:'hidden'}}>
+            <div style={{height:'100%',borderRadius:2,transition:'width 0.4s',
+              background:`linear-gradient(90deg,${col},${col}88)`,
+              width:`${(REV_INTERVALS.filter(iv=>entry.reviews[String(iv)]===true).length/6)*100}%`
+            }}/>
+          </div>
+          {entry.notes&&(
+            <div style={{fontSize:12,color:TM,background:SV,borderRadius:10,
+              padding:'8px 10px',marginBottom:10,lineHeight:1.5}}>
+              📝 {entry.notes}
+            </div>
+          )}
+          <button onClick={()=>onDelete(entry.id)}
+            style={{display:'flex',alignItems:'center',gap:6,
+              background:'#FFEBEE',border:'1px solid #FFCDD2',
+              borderRadius:10,padding:'6px 12px',cursor:'pointer',
+              fontSize:11,fontWeight:700,color:'#D32F2F',
+              fontFamily:'Nunito,sans-serif'}}>
+            <Ico d={IC.trash} s={12} c='#D32F2F'/> Delete entry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── AddRevisionModal ───────────────────────────────*/
+function AddRevisionModal({onAdd,onClose}){
+  const [subj,setSubj]=useState('Networks');
+  const [customSubj,setCustomSubj]=useState('');
+  const [topic,setTopic]=useState('');
+  const [pages,setPages]=useState('');
+  const [date,setDate]=useState(todayStr());
+  const [notes,setNotes]=useState('');
+
+  const doAdd=()=>{
+    const s=subj==='Other'?customSubj.trim():subj;
+    if(!s){return;}
+    const reviews={};
+    REV_INTERVALS.forEach(iv=>{reviews[String(iv)]=null;});
+    onAdd({id:uid(),subject:s,topic:topic.trim(),pages:pages.trim(),
+      dateStudied:date,notes:notes.trim(),reviews});
+    onClose();
+  };
+
+  return(
+    <BSModal onClose={onClose}>
+      <div style={{fontSize:17,fontWeight:900,color:TX,marginBottom:16}}>
+        📚 Log New Study Session
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div>
+          <label style={LBL}>Subject</label>
+          <div style={{display:'flex',gap:7,flexWrap:'wrap',marginBottom:subj==='Other'?8:0}}>
+            {GATE_SUBJECTS.map(s=>(
+              <button key={s} onClick={()=>setSubj(s)}
+                style={{padding:'6px 12px',borderRadius:20,border:`2px solid ${subj===s?subjColor(s):OL}`,
+                  background:subj===s?subjColor(s)+'22':SUR,
+                  color:subj===s?subjColor(s):TM,
+                  fontSize:12,fontWeight:700,cursor:'pointer',
+                  fontFamily:'Nunito,sans-serif',transition:'all 0.15s'}}>
+                {s}
+              </button>
+            ))}
+          </div>
+          {subj==='Other'&&(
+            <input value={customSubj} onChange={e=>setCustomSubj(e.target.value)}
+              placeholder="Enter subject name"
+              style={INPS}/>
+          )}
+        </div>
+        <div>
+          <label style={LBL}>Topic / Chapter (optional)</label>
+          <input value={topic} onChange={e=>setTopic(e.target.value)}
+            placeholder="e.g. KVL/KCL, Thevenin's Theorem"
+            style={INPS}/>
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <div style={{flex:1}}>
+            <label style={LBL}>Pages (optional)</label>
+            <input value={pages} onChange={e=>setPages(e.target.value)}
+              placeholder="e.g. 45-67"
+              style={INPS}/>
+          </div>
+          <div style={{flex:1}}>
+            <label style={LBL}>Date Studied</label>
+            <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+              style={INPS}/>
+          </div>
+        </div>
+        <div>
+          <label style={LBL}>Quick Notes (optional)</label>
+          <textarea value={notes} onChange={e=>setNotes(e.target.value)}
+            placeholder="Key concepts, doubts, formulas to remember…"
+            style={{...INPS,height:70,resize:'none'}}/>
+        </div>
+        <div style={{background:'#E8F5E9',borderRadius:12,padding:'10px 12px',
+          fontSize:11,color:'#2E7D32',lineHeight:1.6}}>
+          🔁 System will auto-schedule reviews at: <b>Same Day → Day 3 → Day 6 → Day 30 → Day 60 → Day 90</b>
+        </div>
+        <div style={{display:'flex',gap:9,marginTop:4}}>
+          <button onClick={doAdd}
+            style={{flex:1,padding:'13px',
+              background:`linear-gradient(90deg,${P},${P2})`,
+              border:'none',borderRadius:14,color:'#FFF',
+              fontWeight:900,fontSize:14,cursor:'pointer',
+              fontFamily:'Nunito,sans-serif'}}>
+            Log Session
+          </button>
+          <button onClick={onClose}
+            style={{flex:1,padding:'13px',background:SV,
+              border:`2px solid ${OL}`,borderRadius:14,color:TM,
+              fontWeight:700,fontSize:14,cursor:'pointer',
+              fontFamily:'Nunito,sans-serif'}}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </BSModal>
+  );
+}
+
+const LBL={fontSize:11,fontWeight:700,color:TS,display:'block',marginBottom:5,letterSpacing:0.3};
+const INPS={width:'100%',border:`2px solid ${OL}`,borderRadius:12,padding:'10px 12px',
+  fontSize:13,color:TX,background:SV,boxSizing:'border-box',fontWeight:600,
+  fontFamily:'Nunito,sans-serif',outline:'none'};
+
+/* ═══════════════════════════════════════════════════
+   REVISION VIEW (full tab)
+   ═══════════════════════════════════════════════════ */
+function RevisionView({entries,onToggle,onDelete,onAdd}){
+  const [showAdd,setShowAdd]=useState(false);
+  const [filterSubj,setFilterSubj]=useState('All');
+  const [search,setSearch]=useState('');
+  const [tab,setTab]=useState('due'); // due | all | complete
+
+  const today=todayStr();
+  const allSubjects=['All',...[...new Set(entries.map(e=>e.subject))].sort()];
+
+  const filtered=useMemo(()=>{
+    let r=entries;
+    if(filterSubj!=='All')r=r.filter(e=>e.subject===filterSubj);
+    if(search.trim())r=r.filter(e=>
+      e.subject.toLowerCase().includes(search.toLowerCase())||
+      e.topic.toLowerCase().includes(search.toLowerCase())
+    );
+    if(tab==='due')r=r.filter(e=>['due'].includes(getEntryStatus(e)));
+    if(tab==='complete')r=r.filter(e=>getEntryStatus(e)==='complete');
+    return [...r].sort((a,b)=>a.dateStudied<b.dateStudied?1:-1);
+  },[entries,filterSubj,search,tab]);
+
+  const dueCount=entries.filter(e=>getEntryStatus(e)==='due').length;
+  const completeCount=entries.filter(e=>getEntryStatus(e)==='complete').length;
+
+  return(
+    <div>
+      {/* summary cards */}
+      <div style={{display:'flex',gap:9,marginBottom:14}}>
+        <div style={{flex:1,background:'linear-gradient(135deg,#FFF3E0,#FFE0B2)',
+          borderRadius:18,padding:'13px',border:'1px solid #FFB74D',
+          boxShadow:'0 2px 10px rgba(255,152,0,0.15)'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#E65100',letterSpacing:1}}>DUE / OVERDUE</div>
+          <div style={{fontSize:28,fontWeight:900,color:'#E65100',lineHeight:1.1}}>{dueCount}</div>
+          <div style={{fontSize:11,color:'#F57C00'}}>topics need review</div>
+        </div>
+        <div style={{flex:1,background:'linear-gradient(135deg,#E8F5E9,#C8E6C9)',
+          borderRadius:18,padding:'13px',border:'1px solid #A5D6A7',
+          boxShadow:'0 2px 10px rgba(56,142,60,0.12)'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#2E7D32',letterSpacing:1}}>COMPLETE</div>
+          <div style={{fontSize:28,fontWeight:900,color:'#2E7D32',lineHeight:1.1}}>{completeCount}</div>
+          <div style={{fontSize:11,color:'#388E3C'}}>of {entries.length} total</div>
+        </div>
+      </div>
+
+      {/* search */}
+      <div style={{position:'relative',marginBottom:10}}>
+        <div style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)'}}>
+          <Ico d={IC.search} s={15} c={TS}/>
+        </div>
+        <input value={search} onChange={e=>setSearch(e.target.value)}
+          placeholder="Search subject or topic…"
+          style={{width:'100%',border:`2px solid ${OL}`,borderRadius:14,
+            padding:'10px 12px 10px 36px',fontSize:13,color:TX,
+            background:SUR,boxSizing:'border-box',fontFamily:'Nunito,sans-serif',
+            outline:'none'}}/>
+      </div>
+
+      {/* subject filter chips */}
+      <div style={{display:'flex',gap:6,overflowX:'auto',marginBottom:12,
+        paddingBottom:4,WebkitOverflowScrolling:'touch'}}>
+        {allSubjects.map(s=>(
+          <button key={s} onClick={()=>setFilterSubj(s)}
+            style={{flexShrink:0,padding:'5px 12px',borderRadius:20,
+              border:`2px solid ${filterSubj===s?(s==='All'?P:subjColor(s)):OL}`,
+              background:filterSubj===s?(s==='All'?PC:subjColor(s)+'22'):SUR,
+              color:filterSubj===s?(s==='All'?P:subjColor(s)):TM,
+              fontSize:11,fontWeight:700,cursor:'pointer',
+              fontFamily:'Nunito,sans-serif',whiteSpace:'nowrap'}}>
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {/* tab bar */}
+      <div style={{display:'flex',background:SV,borderRadius:14,padding:3,
+        marginBottom:14,gap:2}}>
+        {[['due',`Due/Overdue (${dueCount})`],['all','All Entries'],['complete',`Done (${completeCount})`]].map(([id,lbl])=>(
+          <button key={id} onClick={()=>setTab(id)}
+            style={{flex:1,padding:'8px 4px',borderRadius:12,border:'none',
+              background:tab===id?SUR:'transparent',
+              color:tab===id?P:TS,
+              fontSize:11,fontWeight:tab===id?800:600,cursor:'pointer',
+              fontFamily:'Nunito,sans-serif',
+              boxShadow:tab===id?'0 1px 4px rgba(103,80,164,0.15)':'none',
+              transition:'all 0.2s'}}>
+            {lbl}
+          </button>
+        ))}
+      </div>
+
+      {/* entries */}
+      {filtered.length===0?(
+        <div style={{textAlign:'center',padding:'40px 20px',color:TS}}>
+          <div style={{fontSize:36,marginBottom:8}}>{tab==='due'?'🎉':'📭'}</div>
+          <div style={{fontSize:15,fontWeight:700,color:TX}}>
+            {tab==='due'?'No pending reviews!':'No entries found'}
+          </div>
+          <div style={{fontSize:13,marginTop:4}}>
+            {tab==='due'?'All caught up. Keep studying!':'Try a different filter or add new entries'}
+          </div>
+        </div>
+      ):filtered.map(entry=>(
+        <RevisionCard key={entry.id} entry={entry}
+          onToggle={onToggle} onDelete={onDelete}/>
+      ))}
+
+      {showAdd&&<AddRevisionModal onAdd={onAdd} onClose={()=>setShowAdd(false)}/>}
+      {/* FAB handled in parent */}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   STATS VIEW
+   ═══════════════════════════════════════════════════ */
+function StatsView({daily,logs,revEntries}){
+  const [stab,setStab]=useState('habits');
+  const bestStr=useMemo(()=>Math.max(0,...daily.map((_,i)=>getStreak(logs,i))),[logs,daily]);
+  const avg30=useMemo(()=>daily.length?Math.round(daily.reduce((a,_,i)=>a+getRate(logs,i,30),0)/daily.length):0,[logs,daily]);
+  const monthProgress=useMemo(()=>{
+    const T=now2();
+    const rel=T.d;
+    let done=0;
+    for(let d=1;d<=rel;d++){
+      const k=dk(T.y,T.m,d);
+      done+=daily.filter((_,i)=>(logs[k]||{})[i]).length;
+    }
+    const total=daily.length*rel;
+    return{pct:total?Math.round(done/total*100):0,done,total,month:MONTHS[T.m],year:T.y};
+  },[daily,logs]);
+
+  /* revision stats per subject */
+  const subjStats=useMemo(()=>{
+    const m={};
+    revEntries.forEach(e=>{
+      if(!m[e.subject])m[e.subject]={total:0,done:0,intervals:{0:0,3:0,6:0,30:0,60:0,90:0}};
+      m[e.subject].total++;
+      let allDone=true;
+      REV_INTERVALS.forEach(iv=>{
+        if(e.reviews[String(iv)]===true)m[e.subject].intervals[iv]++;
+        else allDone=false;
+      });
+      if(allDone)m[e.subject].done++;
+    });
+    return Object.entries(m).map(([s,v])=>({subject:s,...v,
+      completionPct:v.total?Math.round(
+        (REV_INTERVALS.reduce((a,iv)=>a+v.intervals[iv],0)/(v.total*6))*100
+      ):0
+    })).sort((a,b)=>b.completionPct-a.completionPct);
+  },[revEntries]);
+
+  return(
+    <div>
+      <div style={{background:`linear-gradient(135deg,${P},${P2})`,
+        borderRadius:22,padding:'17px',color:'#FFF',boxShadow:`0 6px 20px ${P}33`,
+        marginBottom:14}}>
+        <div style={{fontSize:10,fontWeight:900,letterSpacing:1.2,opacity:0.75,textTransform:'uppercase'}}>
+          Ananya's Monthly Progress
+        </div>
+        <div style={{display:'flex',alignItems:'flex-end',gap:10,marginTop:4}}>
+          <div style={{fontSize:36,fontWeight:900,lineHeight:1}}>{monthProgress.pct}%</div>
+          <div style={{fontSize:12,fontWeight:800,opacity:0.82,marginBottom:5}}>
+            {monthProgress.done}/{monthProgress.total||0} checks in {monthProgress.month}
+          </div>
+        </div>
+        <div style={{height:8,background:'rgba(255,255,255,0.24)',borderRadius:5,overflow:'hidden',marginTop:12}}>
+          <div style={{height:'100%',width:`${monthProgress.pct}%`,
+            background:'linear-gradient(90deg,#FFFFFF,#B2EBF2)',borderRadius:5,transition:'width 0.5s'}}/>
+        </div>
+      </div>
+
+      <div style={{display:'flex',background:SV,borderRadius:14,padding:3,marginBottom:14,gap:2}}>
+        {[['habits','Habit Stats'],['revision','Revision Stats'],['report','Weekly Report']].map(([id,lbl])=>(
+          <button key={id} onClick={()=>setStab(id)}
+            style={{flex:1,padding:'9px',borderRadius:12,border:'none',
+              background:stab===id?SUR:'transparent',color:stab===id?P:TS,
+              fontSize:13,fontWeight:stab===id?800:600,cursor:'pointer',
+              fontFamily:'Nunito,sans-serif',
+              boxShadow:stab===id?'0 1px 4px rgba(103,80,164,0.15)':'none',
+              transition:'all 0.2s'}}>
+            {lbl}
+          </button>
+        ))}
+      </div>
+
+      {stab==='habits'&&(
+        <div>
+          <div style={{display:'flex',gap:9,marginBottom:14}}>
+            <div style={{flex:1,background:`linear-gradient(135deg,${PC},#DDD8FF)`,
+              borderRadius:18,padding:'14px',border:`1px solid ${OL}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:P,letterSpacing:1}}>BEST STREAK</div>
+              <div style={{fontSize:30,fontWeight:900,color:P}}>{bestStr}d</div>
+            </div>
+            <div style={{flex:1,background:'linear-gradient(135deg,#E8F5E9,#C8E6C9)',
+              borderRadius:18,padding:'14px',border:'1px solid #A5D6A7'}}>
+              <div style={{fontSize:10,fontWeight:700,color:'#2E7D32',letterSpacing:1}}>30D AVG</div>
+              <div style={{fontSize:30,fontWeight:900,color:'#2E7D32'}}>{avg30}%</div>
+            </div>
+          </div>
+
+          {/* Activity Heatmap */}
+          <div style={{background:SUR,border:`1px solid ${OL}`,borderRadius:20,
+            padding:'14px',marginBottom:14,boxShadow:'0 1px 4px rgba(103,80,164,0.07)'}}>
+            <div style={{fontSize:12,fontWeight:800,color:P,marginBottom:10,letterSpacing:0.5}}>
+              📅 15-WEEK ACTIVITY MAP
+            </div>
+            <HeatmapGrid logs={logs} daily={daily} weeks={15}/>
+          </div>
+
+          {/* Peak Day Analysis */}
+          {(()=>{
+            const dayTotals=Array(7).fill(0);const dayCounts=Array(7).fill(0);
+            Object.keys(logs).forEach(k=>{
+              const d=new Date(k);const dow=d.getDay();
+              const done=daily.filter((_,i)=>(logs[k]||{})[i]).length;
+              const pct=daily.length?done/daily.length*100:0;
+              dayTotals[dow]+=pct;dayCounts[dow]++;
+            });
+            const dayAvgs=WD.map((_,i)=>dayCounts[i]?Math.round(dayTotals[i]/dayCounts[i]):0);
+            const best=Math.max(...dayAvgs);
+            return(
+              <div style={{background:SUR,border:`1px solid ${OL}`,borderRadius:20,
+                padding:'14px',marginBottom:14,boxShadow:'0 1px 4px rgba(103,80,164,0.07)'}}>
+                <div style={{fontSize:12,fontWeight:800,color:P,marginBottom:10,letterSpacing:0.5}}>
+                  ⚡ PEAK PRODUCTIVITY DAYS
+                </div>
+                <div style={{display:'flex',gap:5,alignItems:'flex-end',height:60}}>
+                  {WD.map((day,i)=>(
+                    <div key={i} style={{flex:1,display:'flex',flexDirection:'column',
+                      alignItems:'center',gap:2}}>
+                      <div style={{fontSize:8,fontWeight:700,color:dayAvgs[i]===best?P:TS}}>
+                        {dayAvgs[i]}%
+                      </div>
+                      <div style={{width:'100%',borderRadius:'3px 3px 0 0',
+                        height:`${Math.max(4,dayAvgs[i])}%`,minHeight:4,
+                        background:dayAvgs[i]===best?`linear-gradient(0deg,${P},${P2})`:OL,
+                        transition:'height 0.4s'}}/>
+                      <div style={{fontSize:8,fontWeight:dayAvgs[i]===best?800:500,
+                        color:dayAvgs[i]===best?P:TS}}>{day}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{fontSize:11,color:P,fontWeight:700,marginTop:8}}>
+                  🌟 Your most productive day: {WD[dayAvgs.indexOf(best)]}
+                </div>
+              </div>
+            );
+          })()}
+          {daily.map((h,i)=>{
+            const col=hc(i);
+            const st=getStreak(logs,i),lg=getLongest(logs,i);
+            const r7=getRate(logs,i,7),r30=getRate(logs,i,30);
+            return(
+              <div key={i} style={{background:SUR,border:`1px solid ${OL}`,
+                borderRadius:20,padding:'14px',marginBottom:9,
+                boxShadow:'0 1px 4px rgba(103,80,164,0.07)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                  <div style={{width:9,height:9,borderRadius:'50%',background:col.f}}/>
+                  <span style={{fontSize:13,fontWeight:700,color:TX,flex:1}}>{h}</span>
+                  {st>=3&&<Chip label={`🔥${st}d`} color={col.f} small/>}
+                </div>
+                <div style={{display:'flex',gap:6}}>
+                  {[[`${st}d`,'Streak',col.f],[`${r7}%`,'7d',P],[`${r30}%`,'30d','#0097A7'],[`${lg}d`,'Best','#C2185B']].map(([v,l,c2])=>(
+                    <div key={l} style={{flex:1,background:SV,borderRadius:12,padding:'8px 4px',textAlign:'center'}}>
+                      <div style={{fontSize:15,fontWeight:900,color:c2}}>{v}</div>
+                      <div style={{fontSize:9,color:TS,fontWeight:600,marginTop:1,textTransform:'uppercase',letterSpacing:0.5}}>{l}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{height:4,background:OL,borderRadius:2,marginTop:9,overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${r30}%`,background:col.f,borderRadius:2,transition:'width 0.5s'}}/>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {stab==='revision'&&(
+        <div>
+          <SH ch="Completion rate by subject"/>
+          {subjStats.length===0&&(
+            <div style={{textAlign:'center',padding:'30px',color:TS,fontSize:13}}>
+              No revision data yet. Start logging study sessions!
+            </div>
+          )}
+          {subjStats.map(({subject,total,done,completionPct,intervals})=>{
+            const col=subjColor(subject);
+            return(
+              <div key={subject} style={{background:SUR,border:`1px solid ${OL}`,
+                borderRadius:20,padding:'14px',marginBottom:10,
+                boxShadow:'0 1px 4px rgba(103,80,164,0.07)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:10}}>
+                  <div style={{width:32,height:32,borderRadius:10,background:col+'22',
+                    display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <span style={{fontSize:11,fontWeight:900,color:col}}>{subject.slice(0,3)}</span>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:800,color:TX}}>{subject}</div>
+                    <div style={{fontSize:11,color:TS}}>{total} sessions · {done} fully complete</div>
+                  </div>
+                  <div style={{fontSize:22,fontWeight:900,color:col}}>{completionPct}%</div>
+                </div>
+                <div style={{height:6,background:OL,borderRadius:3,overflow:'hidden',marginBottom:10}}>
+                  <div style={{height:'100%',width:`${completionPct}%`,
+                    background:`linear-gradient(90deg,${col},${col}88)`,
+                    borderRadius:3,transition:'width 0.5s'}}/>
+                </div>
+                <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                  {REV_INTERVALS.map(iv=>(
+                    <div key={iv} style={{background:SV,borderRadius:10,
+                      padding:'5px 8px',textAlign:'center',flex:'1 1 50px'}}>
+                      <div style={{fontSize:13,fontWeight:800,color:col}}>{intervals[iv]}</div>
+                      <div style={{fontSize:8,color:TS,letterSpacing:0.5}}>{REV_LABELS[iv]}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {stab==='report'&&(()=>{
+        const weeks=[];
+        for(let w=0;w<8;w++){
+          const d=new Date();d.setDate(d.getDate()-w*7);
+          const wk=wkKey(d);
+          let totalPct=0,days=0;
+          for(let dd=0;dd<7;dd++){
+            const day=new Date(d);day.setDate(day.getDate()-dd);
+            const k=dk(day.getFullYear(),day.getMonth(),day.getDate());
+            const done=daily.filter((_,i)=>(logs[k]||{})[i]).length;
+            const pct=daily.length?Math.round(done/daily.length*100):0;
+            if(Object.keys(logs[k]||{}).length>0||w===0){totalPct+=pct;days++;}
+          }
+          const avg=days>0?Math.round(totalPct/Math.max(days,1)):0;
+          const label=w===0?'This Week':w===1?'Last Week':`${w} weeks ago`;
+          weeks.push({label,avg,wk});
+        }
+        return(
+          <div>
+            <SH ch="Weekly Performance — Last 8 Weeks"/>
+            {weeks.map(({label,avg,wk},i)=>(
+              <div key={wk} style={{background:'#FFFFFF',border:'1px solid #E4DAFB',
+                borderRadius:18,padding:'12px 16px',marginBottom:9,
+                boxShadow:'0 1px 4px rgba(103,80,164,0.07)'}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#1C1B1F'}}>{label}</div>
+                    <div style={{fontSize:10,color:'#79747E'}}>{wk}</div>
+                  </div>
+                  <div style={{fontSize:24,fontWeight:900,
+                    color:avg>=80?'#2E7D32':avg>=50?'#F57C00':'#C62828'}}>{avg}%</div>
+                </div>
+                <div style={{height:8,background:'#E4DAFB',borderRadius:4,overflow:'hidden'}}>
+                  <div style={{height:'100%',borderRadius:4,transition:'width 0.5s',
+                    background:avg>=80?'linear-gradient(90deg,#43A047,#66BB6A)':avg>=50?'linear-gradient(90deg,#F57C00,#FFB74D)':'linear-gradient(90deg,#E53935,#EF9A9A)',
+                    width:`${avg}%`}}/>
+                </div>
+                <div style={{fontSize:10,color:avg>=80?'#2E7D32':avg>=50?'#F57C00':'#C62828',
+                  fontWeight:700,marginTop:5}}>
+                  {avg>=80?'🏆 Excellent week!':avg>=50?'💪 Good effort, push harder':'⚠️ Needs improvement'}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   TODAY VIEW — Minimalist redesign
+   ═══════════════════════════════════════════════════ */
+function TodayView({daily,logs,TK,toggleToday,revEntries,onRevToggle,todayDone,todayPct,bestStr,avg30,
+  gateCountdown,gateDate,todayHours,weekHours,totalHours,
+  showHoursInput,setShowHoursInput,hoursInput,setHoursInput,logHours,darkMode,
+  suggestions,xp,badges}){
+  const dueEntries=useMemo(()=>getTodayDueEntries(revEntries),[revEntries]);
+  const quote=useMemo(()=>todayQuote(),[]);
+  const [showDueRevs,setShowDueRevs]=useState(true);
+  const gateColor=gateCountdown<=30?'#FF5722':gateCountdown<=90?'#F57C00':P;
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+
+      {/* ── TOP INFO STRIP: Gate + Study Hours ── */}
+      <div style={{background:'#FFFFFF',borderRadius:16,border:'1px solid #EDE8FB',
+        boxShadow:'0 1px 6px rgba(103,80,164,0.06)',overflow:'hidden'}}>
+
+        {/* Gate countdown row */}
+        <div style={{display:'flex',alignItems:'center',gap:13,padding:'14px 16px',
+          borderBottom:'1px solid #F0EAFE',
+          background:`linear-gradient(135deg,${gateColor}16,#FFFFFF 68%)`}}>
+          <div style={{width:48,height:48,borderRadius:15,
+            background:gateColor,display:'flex',alignItems:'center',
+            justifyContent:'center',flexShrink:0,boxShadow:`0 5px 16px ${gateColor}36`}}>
+            <span style={{fontSize:22,color:'#FFF',fontWeight:900,lineHeight:1}}>{gateCountdown}</span>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,fontWeight:900,color:gateColor,letterSpacing:1.2,textTransform:'uppercase'}}>GATE Countdown</div>
+            <div style={{fontSize:20,fontWeight:900,color:gateColor,lineHeight:1.08}}>
+              {gateCountdown} days left
+            </div>
+            <div style={{fontSize:10,color:gateColor,fontWeight:800,marginTop:3,lineHeight:1.35}}>
+              {gateCountdown<=30?'Final stretch - every session counts':gateCountdown<=90?'Serious prep window - protect today':'2027 govt job mission for your parents'} | Target: {gateDate}
+            </div>
+          </div>
+        </div>
+
+        {/* Study Hours row */}
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'11px 16px'}}>
+          <div style={{width:36,height:36,borderRadius:12,
+            background:'#E8F5E9',display:'flex',alignItems:'center',
+            justifyContent:'center',flexShrink:0}}>
+            <span style={{fontSize:18}}>📚</span>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,fontWeight:700,color:'#9E94C0',letterSpacing:1,textTransform:'uppercase'}}>Study Time</div>
+            <div style={{display:'flex',gap:10,alignItems:'baseline',flexWrap:'wrap'}}>
+              <span style={{fontSize:16,fontWeight:900,color:'#2E7D32'}}>{todayHours}h</span>
+              <span style={{fontSize:11,color:'#81C784',fontWeight:600}}>today</span>
+              <span style={{fontSize:13,fontWeight:700,color:'#43A047'}}>{weekHours}h</span>
+              <span style={{fontSize:11,color:'#81C784',fontWeight:600}}>week</span>
+              <span style={{fontSize:12,fontWeight:600,color:'#66BB6A'}}>{Math.round(totalHours)}h</span>
+              <span style={{fontSize:11,color:'#81C784',fontWeight:500}}>total</span>
+            </div>
+          </div>
+          <button onClick={()=>setShowHoursInput(v=>!v)}
+            style={{background:showHoursInput?'#FFEBEE':'#E8F5E9',border:'none',
+              borderRadius:10,padding:'6px 12px',cursor:'pointer',color:showHoursInput?'#D32F2F':'#2E7D32',
+              fontSize:11,fontWeight:800,flexShrink:0,fontFamily:'Nunito,sans-serif'}}>
+            {showHoursInput?'Cancel':'Log'}
+          </button>
+        </div>
+
+        {showHoursInput&&(
+          <div style={{padding:'0 16px 12px',display:'flex',gap:8,alignItems:'center'}}>
+            <input type="number" min="0" max="24" step="0.5" value={hoursInput}
+              onChange={e=>setHoursInput(e.target.value)}
+              onKeyDown={e=>e.key==='Enter'&&logHours()}
+              autoFocus placeholder="e.g. 4.5"
+              style={{flex:1,border:'2px solid #A5D6A7',borderRadius:10,padding:'8px 12px',
+                fontSize:14,fontWeight:700,color:'#1B5E20',background:'#F1FAF1',outline:'none',
+                fontFamily:'Nunito,sans-serif'}}/>
+            <span style={{fontSize:12,color:'#388E3C',fontWeight:600}}>hours</span>
+            <button onClick={logHours}
+              style={{background:'#43A047',border:'none',borderRadius:10,padding:'8px 14px',
+                cursor:'pointer',color:'#FFF',fontWeight:800,fontSize:12,fontFamily:'Nunito,sans-serif'}}>
+              Save
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── HERO CARD: Progress + Stats + Quote ── */}
+      <div style={{background:`linear-gradient(135deg,${P} 0%,${P2} 100%)`,
+        borderRadius:20,padding:'18px 20px',
+        boxShadow:'0 6px 24px rgba(103,80,164,0.22)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:12}}>
+          <div style={{position:'relative',flexShrink:0}}>
+            <Ring pct={todayPct} size={88} color='#FFF'/>
+            <div style={{position:'absolute',top:'50%',left:'50%',
+              transform:'translate(-50%,-50%)',textAlign:'center'}}>
+              <div style={{fontSize:17,fontWeight:900,color:'#FFF',lineHeight:1}}>{todayPct}%</div>
+            </div>
+          </div>
+          <div style={{color:'#FFF',flex:1}}>
+            <div style={{fontSize:22,fontWeight:900,lineHeight:1.2}}>
+              {todayPct===100?'🎉 Perfect, Ananya!':todayDone===0?'Ananya, start strong':todayDone+' done'}
+            </div>
+            <div style={{fontSize:12,opacity:0.75,marginTop:2}}>
+              {todayPct===100?'GATE discipline locked today':(daily.length-todayDone)+' left · '+dueEntries.length+' rev due · GATE 2027'}
+            </div>
+            <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap'}}>
+              <span style={{background:'rgba(255,255,255,0.18)',borderRadius:8,
+                padding:'3px 9px',fontSize:10,fontWeight:700}}>🔥 {bestStr}d</span>
+              <span style={{background:'rgba(255,255,255,0.18)',borderRadius:8,
+                padding:'3px 9px',fontSize:10,fontWeight:700}}>📊 {avg30}% / 30d</span>
+              <span style={{background:'rgba(255,255,255,0.18)',borderRadius:8,
+                padding:'3px 9px',fontSize:10,fontWeight:700}}>
+                {getLevel(xp)<=2?'🌱':getLevel(xp)<=4?'📖':getLevel(xp)<=6?'🎯':'🏆'} Lv{getLevel(xp)}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div style={{marginBottom:10}}>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:9,
+            color:'rgba(255,255,255,0.6)',marginBottom:3}}>
+            <span>{getLevelName(xp)} · {xp} XP · {badges.length}/{ALL_BADGES.length} badges</span>
+            <span>{getLevelProgress(xp)}% → Lv{getLevel(xp)+1}</span>
+          </div>
+          <div style={{height:4,background:'rgba(255,255,255,0.2)',borderRadius:2,overflow:'hidden'}}>
+            <div style={{height:'100%',width:`${getLevelProgress(xp)}%`,
+              background:'rgba(255,255,255,0.85)',borderRadius:2,transition:'width 0.5s'}}/>
+          </div>
+        </div>
+        <div style={{borderTop:'1px solid rgba(255,255,255,0.15)',paddingTop:10}}>
+          <div style={{fontSize:11,color:'rgba(255,255,255,0.82)',fontStyle:'italic',lineHeight:1.5}}>
+            ✨ "{quote.q}"
+          </div>
+          <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',fontWeight:700,marginTop:2}}>— {quote.a}</div>
+        </div>
+      </div>
+
+      {/* ── DUE REVISIONS (collapsible) ── */}
+      {dueEntries.length>0&&(
+        <div style={{background:'#FFFFFF',borderRadius:16,border:'1.5px solid #FFB74D',
+          overflow:'hidden',boxShadow:'0 2px 10px rgba(255,152,0,0.1)'}}>
+          <button onClick={()=>setShowDueRevs(v=>!v)}
+            style={{display:'flex',alignItems:'center',gap:10,width:'100%',
+              padding:'12px 16px',background:'none',border:'none',cursor:'pointer',textAlign:'left'}}>
+            <div style={{width:8,height:8,borderRadius:'50%',background:'#E65100',flexShrink:0}}/>
+            <span style={{flex:1,fontSize:13,fontWeight:800,color:'#E65100'}}>
+              {dueEntries.length} Revision{dueEntries.length>1?'s':''} Due
+            </span>
+            <Ico d={showDueRevs?IC.up:IC.down} s={14} c='#E65100'/>
+          </button>
+          {showDueRevs&&(
+            <div style={{padding:'0 14px 12px',display:'flex',flexDirection:'column',gap:7}}>
+              {dueEntries.slice(0,4).map(entry=>{
+                const dueIntervals=REV_INTERVALS.filter(iv=>isRevDueToday(entry,iv)||isRevOverdue(entry,iv));
+                const isOver=dueIntervals.some(iv=>isRevOverdue(entry,iv));
+                const col=subjColor(entry.subject);
+                return(
+                  <div key={entry.id} style={{background:isOver?'#FFF5F5':'#FFFBF3',
+                    borderRadius:12,padding:'10px 12px',
+                    border:`1px solid ${isOver?'#FFCDD2':'#FFE0B2'}`}}>
+                    <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:7}}>
+                      <span style={{fontSize:11,fontWeight:800,color:col,
+                        background:col+'18',borderRadius:7,padding:'2px 8px'}}>{entry.subject}</span>
+                      {entry.topic&&<span style={{fontSize:11,color:TM,flex:1,overflow:'hidden',
+                        textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{entry.topic}</span>}
+                      {isOver&&<Chip label="OVERDUE" color='#C62828' small/>}
+                      <span style={{fontSize:10,color:TS,marginLeft:'auto',flexShrink:0}}>{fmtDate(entry.dateStudied)}</span>
+                    </div>
+                    <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                      {dueIntervals.map(iv=>(
+                        <button key={iv} onClick={()=>onRevToggle(entry.id,iv)}
+                          style={{padding:'5px 10px',borderRadius:9,
+                            border:`1.5px solid ${entry.reviews[String(iv)]===true?'#43A047':'#FFB74D'}`,
+                            background:entry.reviews[String(iv)]===true?'#E8F5E9':'#FFF',
+                            color:entry.reviews[String(iv)]===true?'#2E7D32':'#E65100',
+                            fontSize:11,fontWeight:700,cursor:'pointer',
+                            fontFamily:'Nunito,sans-serif',transition:'all 0.15s'}}>
+                          {entry.reviews[String(iv)]===true?'✓ ':''}{REV_LABELS[iv]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {dueEntries.length>4&&(
+                <div style={{fontSize:11,color:'#E65100',fontWeight:600,paddingLeft:2}}>
+                  +{dueEntries.length-4} more → Revise tab
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── HABITS CARD ── */}
+      <div style={{background:'#FFFFFF',borderRadius:16,border:'1px solid #EDE8FB',
+        boxShadow:'0 1px 6px rgba(103,80,164,0.06)',overflow:'hidden'}}>
+        <div style={{padding:'12px 16px 8px',display:'flex',alignItems:'center',
+          justifyContent:'space-between',borderBottom:'1px solid #F0EAFE'}}>
+          <span style={{fontSize:10,fontWeight:800,color:'#9E94C0',letterSpacing:1.2,textTransform:'uppercase'}}>
+            Today's Habits
+          </span>
+          <span style={{fontSize:11,fontWeight:700,color:P}}>{todayDone}/{daily.length} done</span>
+        </div>
+        {daily.length===0&&(
+          <div style={{textAlign:'center',padding:'28px 20px',color:TS}}>
+            <div style={{fontSize:32,marginBottom:6}}>🎯</div>
+            <div style={{fontSize:13,fontWeight:700}}>No habits yet — add in Settings tab</div>
+          </div>
+        )}
+        {daily.map((h,i)=>{
+          const done=!!(logs[TK]||{})[i];
+          const st=getStreak(logs,i);
+          const col=hc(i);
+          return(
+            <button key={i} className="hbtn" onClick={()=>toggleToday(i)}
+              style={{display:'flex',alignItems:'center',gap:11,width:'100%',
+                padding:'10px 16px',
+                background:done?col.bg+'88':'transparent',
+                border:'none',borderBottom:`1px solid ${done?col.f+'22':'#F6F0FF'}`,
+                textAlign:'left',cursor:'pointer',transition:'background 0.12s'}}>
+              <div style={{width:22,height:22,borderRadius:7,flexShrink:0,
+                background:done?col.f:'#EDE8FB',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                transition:'all 0.15s'}}>
+                {done&&<Ico d={IC.check} s={12} c='#FFF' sw={3}/>}
+              </div>
+              <span style={{flex:1,fontSize:13,fontWeight:done?600:700,
+                color:done?col.dk:TX,
+                textDecoration:done?'line-through':'none',lineHeight:1.35}}>
+                {h}
+              </span>
+              {st>=3&&<span style={{fontSize:10,fontWeight:800,color:col.f,
+                background:col.bg,border:`1px solid ${col.f}44`,
+                padding:'2px 7px',borderRadius:8,flexShrink:0}}>🔥{st}</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── SMART SUGGESTIONS (collapsible) ── */}
+      <SuggestionsCard suggestions={suggestions}/>
+
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   SETTINGS VIEW
+   ═══════════════════════════════════════════════════ */
+function SettingsView({daily,weekly,setDaily,setWeekly,setLogs,setRevEntries,
+  logs,revEntries,wlogs,setWlogs,addType,setAddType,newName,setNewName,doAdd,
+  editId,setEditId,editTxt,setEditTxt,saveEdit,delConf,setDelConf,doDelete,
+  moveH,pasteOpen,setPasteOpen,pasteTxt,setPasteTxt,doPasteRestore,
+  doExport,doCopy,doFileRestore,fileRef,darkMode,setDarkMode,gateDate,setGateDate,
+  notifEnabled,setNotifEnabled,notifTime,setNotifTime,paletteId,setPaletteId}){
+  const [gateInput,setGateInput]=useState(gateDate);
+  const [localNotifTime,setLocalNotifTime]=useState(notifTime);
+
+  const handleNotifToggle=async()=>{
+    if(!notifEnabled){
+      const ok=await requestNotifPermission();
+      if(ok){
+        setNotifEnabled(true);
+        try{localStorage.setItem('habitra_notif','1');}catch(e){}
+        scheduleNotif(notifTime,`${daily.length} habits and ${revEntries.filter(e=>getEntryStatus(e)==='due').length} revisions due today!`);
+      }else{
+        alert('Enable notifications in your browser settings first.');
+      }
+    }else{
+      setNotifEnabled(false);
+      try{localStorage.setItem('habitra_notif','0');}catch(e){}
+    }
+  };
+
+  const handleNotifTimeChange=()=>{
+    setNotifTime(localNotifTime);
+    try{localStorage.setItem('habitra_notif_time',localNotifTime);}catch(e){}
+    if(notifEnabled)scheduleNotif(localNotifTime,'Your daily HABITRA reminder!');
+  };
+
+  return(
+    <div>
+      {/* Notifications */}
+      <SH ch="🔔 Notifications"/>
+      <div style={{background:'#FFFFFF',borderRadius:20,border:'1px solid #E4DAFB',
+        padding:16,marginBottom:14,boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+          paddingBottom:12,borderBottom:'1px solid #E4DAFB',marginBottom:12}}>
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:'#1C1B1F'}}>🔔 Daily Reminder</div>
+            <div style={{fontSize:11,color:'#79747E',marginTop:2}}>
+              {notifEnabled?`Notifying at ${notifTime}`:'Get daily habit reminders'}
+            </div>
+          </div>
+          <button onClick={handleNotifToggle}
+            style={{width:48,height:26,borderRadius:13,border:'none',cursor:'pointer',
+              background:notifEnabled?P:'#E4DAFB',position:'relative',
+              transition:'background 0.2s',flexShrink:0}}>
+            <div style={{width:20,height:20,borderRadius:'50%',background:'#FFF',
+              position:'absolute',top:3,transition:'left 0.2s',
+              left:notifEnabled?'25px':'3px',boxShadow:'0 1px 4px rgba(0,0,0,0.2)'}}/>
+          </button>
+        </div>
+        {notifEnabled&&(
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <div style={{fontSize:12,fontWeight:700,color:'#49454F',flex:1}}>⏰ Reminder Time</div>
+            <input type="time" value={localNotifTime}
+              onChange={e=>setLocalNotifTime(e.target.value)}
+              style={{border:'2px solid #E4DAFB',borderRadius:10,padding:'7px 10px',
+                fontSize:13,fontWeight:700,color:'#1C1B1F',background:'#F0EAFE',
+                outline:'none',fontFamily:'Nunito,sans-serif'}}/>
+            <button onClick={handleNotifTimeChange}
+              style={{background:`linear-gradient(90deg,${P},${P2})`,border:'none',
+                borderRadius:10,padding:'8px 14px',color:'#FFF',fontWeight:800,
+                fontSize:12,cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>
+              Set
+            </button>
+          </div>
+        )}
+        {!notifEnabled&&(
+          <div style={{fontSize:11,color:'#79747E',background:'#F6F0FF',
+            borderRadius:10,padding:'9px 12px',lineHeight:1.5}}>
+            💡 Toggle on to get a daily reminder at your chosen time — no login required. Works when HABITRA is open or installed as PWA.
+          </div>
+        )}
+      </div>
+
+      {/* Appearance & GATE Date */}
+      <SH ch="Appearance & GATE Settings"/>
+      <div style={{background:'#FFFFFF',borderRadius:20,border:'1px solid #E4DAFB',
+        padding:16,marginBottom:14,boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',
+          paddingBottom:12,borderBottom:'1px solid #E4DAFB',marginBottom:12}}>
+          <div>
+            <div style={{fontSize:14,fontWeight:700,color:'#1C1B1F'}}>🌙 Dark Mode</div>
+            <div style={{fontSize:11,color:'#79747E',marginTop:2}}>Easy on eyes during night study</div>
+          </div>
+          <button onClick={()=>setDarkMode(v=>!v)}
+            style={{width:48,height:26,borderRadius:13,border:'none',cursor:'pointer',
+              background:darkMode?P:'#E4DAFB',position:'relative',transition:'background 0.2s',flexShrink:0}}>
+            <div style={{width:20,height:20,borderRadius:'50%',background:'#FFF',
+              position:'absolute',top:3,transition:'left 0.2s',
+              left:darkMode?'25px':'3px',boxShadow:'0 1px 4px rgba(0,0,0,0.2)'}}/>
+          </button>
+        </div>
+        <div style={{paddingBottom:12,borderBottom:'1px solid #E4DAFB',marginBottom:12}}>
+          <div style={{fontSize:14,fontWeight:700,color:'#1C1B1F',marginBottom:3}}>Color Palette</div>
+          <div style={{fontSize:11,color:'#79747E',marginBottom:10}}>Choose a multi-colored look for habits, buttons, and track graphs</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+            {Object.entries(THEME_PALETTES).map(([id,t])=>(
+              <button key={id} onClick={()=>setPaletteId(id)}
+                style={{border:`2px solid ${paletteId===id?t.primary:'#E4DAFB'}`,
+                  background:paletteId===id?t.container:'#FFFFFF',borderRadius:14,padding:10,
+                  cursor:'pointer',textAlign:'left',fontFamily:'Nunito,sans-serif'}}>
+                <div style={{display:'flex',gap:4,marginBottom:7}}>
+                  {t.habitColors.slice(0,5).map((c,i)=>(
+                    <span key={i} style={{width:17,height:17,borderRadius:6,background:c.f,
+                      boxShadow:`0 1px 4px ${c.f}44`}}/>
+                  ))}
+                </div>
+                <div style={{fontSize:12,fontWeight:900,color:t.primary}}>{t.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{fontSize:14,fontWeight:700,color:'#1C1B1F',marginBottom:3}}>🎯 GATE Target Date</div>
+          <div style={{fontSize:11,color:'#79747E',marginBottom:8}}>Used for Ananya's GATE countdown on the Today screen</div>
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input type="date" value={gateInput} onChange={e=>setGateInput(e.target.value)}
+              style={{flex:1,border:'2px solid #E4DAFB',borderRadius:12,padding:'9px 12px',
+                fontSize:13,fontWeight:700,color:'#1C1B1F',background:'#F0EAFE',outline:'none',
+                fontFamily:'Nunito,sans-serif'}}/>
+            <button onClick={()=>setGateDate(gateInput)}
+              style={{background:`linear-gradient(90deg,${P},${P2})`,border:'none',
+                borderRadius:12,padding:'10px 16px',color:'#FFF',fontWeight:800,
+                fontSize:13,cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>
+              Set
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Daily habits */}
+      <SH ch="Daily Habits — Edit / Reorder / Delete"/>
+      <div style={{background:SUR,borderRadius:20,border:`1px solid ${OL}`,
+        marginBottom:14,overflow:'hidden',boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
+        {daily.map((h,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:7,
+            padding:'9px 10px',
+            borderBottom:i<daily.length-1?`1px solid ${OL}`:undefined,
+            background:editId&&editId.type==='daily'&&editId.idx===i?PC:undefined}}>
+            {editId&&editId.type==='daily'&&editId.idx===i?(
+              <input autoFocus value={editTxt} onChange={e=>setEditTxt(e.target.value)}
+                onKeyDown={e=>{if(e.key==='Enter')saveEdit();if(e.key==='Escape')setEditId(null);}}
+                onBlur={saveEdit}
+                style={{flex:1,border:`2px solid ${P}`,borderRadius:10,padding:'7px 10px',
+                  fontSize:13,fontWeight:700,color:TX,background:'#FFF',minWidth:0,
+                  fontFamily:'Nunito,sans-serif',outline:'none'}}/>
+            ):(
+              <span style={{flex:1,fontSize:13,fontWeight:600,color:TX,
+                minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h}</span>
+            )}
+            <div style={{display:'flex',gap:4,flexShrink:0}}>
+              <IB dis={i===0} onClick={()=>moveH('daily',i,-1)} ch={<Ico d={IC.up} s={13} c={i===0?'#CCC':P}/>}/>
+              <IB dis={i===daily.length-1} onClick={()=>moveH('daily',i,1)} ch={<Ico d={IC.down} s={13} c={i===daily.length-1?'#CCC':P}/>}/>
+              <IB onClick={()=>{setEditId({type:'daily',idx:i});setEditTxt(daily[i]);}} bg='#FFF3E0' ch={<Ico d={IC.edit} s={13} c='#F57C00'/>}/>
+              <IB onClick={()=>setDelConf({type:'daily',idx:i})} bg='#FFEBEE' ch={<Ico d={IC.trash} s={13} c='#D32F2F'/>}/>
+            </div>
+          </div>
+        ))}
+        <button onClick={()=>setAddType('daily')}
+          style={{display:'flex',alignItems:'center',gap:8,width:'100%',
+            background:'none',border:'none',padding:'12px',
+            color:P,fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>
+          <Ico d={IC.plus} s={14} c={P}/> Add Daily Habit
+        </button>
+      </div>
+
+      {/* Weekly goals */}
+      <SH ch="Weekly Goals — Edit / Reorder / Delete"/>
+      <div style={{background:SUR,borderRadius:20,border:`1px solid ${OL}`,
+        marginBottom:14,overflow:'hidden',boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
+        {weekly.map((h,i)=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:7,
+            padding:'9px 10px',
+            borderBottom:i<weekly.length-1?`1px solid ${OL}`:undefined,
+            background:editId&&editId.type==='weekly'&&editId.idx===i?'#E8F5E9':undefined}}>
+            {editId&&editId.type==='weekly'&&editId.idx===i?(
+              <input autoFocus value={editTxt} onChange={e=>setEditTxt(e.target.value)}
+                onKeyDown={e=>{if(e.key==='Enter')saveEdit();if(e.key==='Escape')setEditId(null);}}
+                onBlur={saveEdit}
+                style={{flex:1,border:'2px solid #43A047',borderRadius:10,padding:'7px 10px',
+                  fontSize:13,fontWeight:700,color:TX,background:'#FFF',minWidth:0,
+                  fontFamily:'Nunito,sans-serif',outline:'none'}}/>
+            ):(
+              <span style={{flex:1,fontSize:13,fontWeight:600,color:TX,
+                minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h}</span>
+            )}
+            <div style={{display:'flex',gap:4,flexShrink:0}}>
+              <IB dis={i===0} onClick={()=>moveH('weekly',i,-1)} ch={<Ico d={IC.up} s={13} c={i===0?'#CCC':P}/>}/>
+              <IB dis={i===weekly.length-1} onClick={()=>moveH('weekly',i,1)} ch={<Ico d={IC.down} s={13} c={i===weekly.length-1?'#CCC':P}/>}/>
+              <IB onClick={()=>{setEditId({type:'weekly',idx:i});setEditTxt(weekly[i]);}} bg='#FFF3E0' ch={<Ico d={IC.edit} s={13} c='#F57C00'/>}/>
+              <IB onClick={()=>setDelConf({type:'weekly',idx:i})} bg='#FFEBEE' ch={<Ico d={IC.trash} s={13} c='#D32F2F'/>}/>
+            </div>
+          </div>
+        ))}
+        <button onClick={()=>setAddType('weekly')}
+          style={{display:'flex',alignItems:'center',gap:8,width:'100%',
+            background:'none',border:'none',padding:'12px',
+            color:'#43A047',fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>
+          <Ico d={IC.plus} s={14} c='#43A047'/> Add Weekly Goal
+        </button>
+      </div>
+
+      {/* Backup */}
+      <SH ch="Backup & Restore — All Data"/>
+      <div style={{background:SUR,borderRadius:20,border:`1px solid ${OL}`,
+        padding:16,marginBottom:14,boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
+        <div style={{fontSize:12,color:TM,marginBottom:14,lineHeight:1.6,
+          background:SV,borderRadius:12,padding:'10px 12px'}}>
+          ☁️ Your data <b>auto-syncs to the cloud</b> across all devices. The backup options below are for extra safety — download a .json file anytime and restore it on any device.
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:9}}>
+          {[
+            [doExport,'#EDE7FF',P,IC.dl,'Download Backup (.json)'],
+            [doCopy,SV,P,IC.copy,'Copy Backup to Clipboard'],
+          ].map(([fn,bg,c,icon,lbl],i)=>(
+            <button key={i} onClick={fn}
+              style={{display:'flex',alignItems:'center',gap:9,background:bg,
+                border:'none',borderRadius:14,padding:'13px 16px',cursor:'pointer',
+                color:c,fontSize:13,fontWeight:700,textAlign:'left',fontFamily:'Nunito,sans-serif'}}>
+              <Ico d={icon} s={15} c={c}/> {lbl}
+            </button>
+          ))}
+          <div style={{height:1,background:OL}}/>
+          <button onClick={()=>fileRef.current&&fileRef.current.click()}
+            style={{display:'flex',alignItems:'center',gap:9,background:'#E8F5E9',
+              border:'none',borderRadius:14,padding:'13px 16px',cursor:'pointer',
+              color:'#2E7D32',fontSize:13,fontWeight:700,textAlign:'left',fontFamily:'Nunito,sans-serif'}}>
+            <Ico d={IC.ul} s={15} c='#2E7D32'/> Restore from .json File
+          </button>
+          <input ref={fileRef} type="file" accept=".json,application/json"
+            onChange={doFileRestore} style={{display:'none'}}/>
+          <button onClick={()=>setPasteOpen(v=>!v)}
+            style={{display:'flex',alignItems:'center',gap:9,background:'#FFF3E0',
+              border:'none',borderRadius:14,padding:'13px 16px',cursor:'pointer',
+              color:'#E65100',fontSize:13,fontWeight:700,textAlign:'left',fontFamily:'Nunito,sans-serif'}}>
+            <Ico d={IC.paste} s={15} c='#E65100'/>
+            {pasteOpen?'Hide Paste Area':'Paste JSON to Restore'}
+          </button>
+          {pasteOpen&&(
+            <div>
+              <textarea value={pasteTxt} onChange={e=>setPasteTxt(e.target.value)}
+                placeholder="Paste your backup JSON here then tap Restore…"
+                style={{width:'100%',height:100,border:`2px solid ${OL}`,
+                  borderRadius:12,padding:'10px',fontSize:11,color:TX,
+                  background:SV,resize:'vertical',lineHeight:1.4,
+                  boxSizing:'border-box',fontFamily:'monospace',outline:'none'}}/>
+              <button onClick={doPasteRestore}
+                style={{display:'flex',alignItems:'center',justifyContent:'center',
+                  gap:9,background:PC,border:'none',borderRadius:14,padding:'12px',
+                  cursor:'pointer',color:P,fontSize:13,fontWeight:800,
+                  width:'100%',marginTop:8,fontFamily:'Nunito,sans-serif'}}>
+                ✅ Restore from Pasted JSON
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Danger */}
+      <SH ch="Danger Zone"/>
+      <div style={{background:SUR,borderRadius:20,border:'2px solid #FFCDD2',
+        padding:16,marginBottom:28,boxShadow:'0 1px 6px rgba(103,80,164,0.07)'}}>
+        <button onClick={()=>{
+          if(window.confirm('⚠️ This deletes ALL data — habits, logs AND revision history.\n\nThis cannot be undone. Are you sure?')){
+            const d=freshData();
+            setDaily(d.daily);setWeekly(d.weekly);
+            setLogs(d.logs);setWlogs(d.wlogs);setRevEntries(d.revEntries);
+          }
+        }} style={{display:'flex',alignItems:'center',gap:9,background:'#FFCDD2',
+          border:'2px solid #EF9A9A',borderRadius:14,padding:'12px 16px',cursor:'pointer',
+          color:'#B71C1C',fontSize:13,fontWeight:700,width:'100%',
+          fontFamily:'Nunito,sans-serif',textAlign:'left'}}>
+          <Ico d={IC.warn} s={15} c='#B71C1C'/> Clear All Data & Reset
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   WEEKLY VIEW
+   ═══════════════════════════════════════════════════ */
+function WeeklyView({weekly,wlogs,CWK,toggleWeekly}){
+  const wDone=weekly.filter((_,i)=>(wlogs[CWK]||{})[i]).length;
+  const wPct=weekly.length?Math.round(wDone/weekly.length*100):0;
+  return(
+    <div>
+      <div style={{background:'linear-gradient(135deg,#E8F5E9,#C8E6C9)',
+        borderRadius:24,padding:'18px',marginBottom:14,
+        border:'1px solid #A5D6A7',boxShadow:'0 4px 16px rgba(56,142,60,0.14)'}}>
+        <div style={{fontSize:11,fontWeight:700,color:'#2E7D32',marginBottom:3}}>
+          Week {CWK.split('-W')[1]} · {new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+        </div>
+        <div style={{fontSize:28,fontWeight:900,color:'#1B5E20',lineHeight:1,marginBottom:10}}>
+          {wDone}/{weekly.length}
+          <span style={{fontSize:14,fontWeight:600,color:'#388E3C',marginLeft:8}}>goals done</span>
+        </div>
+        <div style={{height:7,background:'rgba(255,255,255,0.5)',borderRadius:4,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${wPct}%`,
+            background:'linear-gradient(90deg,#43A047,#66BB6A)',
+            borderRadius:4,transition:'width 0.5s'}}/>
+        </div>
+      </div>
+      {weekly.map((h,i)=>{
+        const done=!!(wlogs[CWK]||{})[i];
+        return(
+          <button key={i} className="hbtn" onClick={()=>toggleWeekly(i)}
+            style={{display:'flex',alignItems:'center',gap:12,width:'100%',
+              background:done?'#E8F5E9':SUR,border:`2px solid ${done?'#43A047':OL}`,
+              borderRadius:18,padding:'13px 15px',marginBottom:8,
+              textAlign:'left',cursor:'pointer',transition:'all 0.15s',
+              boxShadow:done?'0 2px 12px rgba(67,160,71,0.2)':'0 1px 4px rgba(103,80,164,0.07)'}}>
+            <div style={{width:30,height:30,borderRadius:10,flexShrink:0,
+              background:done?'#43A047':OL,
+              display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
+              {done&&<Ico d={IC.check} s={16} c='#FFF' sw={3}/>}
+            </div>
+            <span style={{flex:1,fontSize:14,fontWeight:done?600:700,
+              color:done?'#2E7D32':TX,textDecoration:done?'line-through':'none'}}>{h}</span>
+          </button>
+        );
+      })}
+      {!weekly.length&&(
+        <div style={{textAlign:'center',padding:'30px 20px',color:TS}}>
+          <div style={{fontSize:13,fontWeight:600}}>No weekly goals yet. Tap + to add!</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN APP
+   ═══════════════════════════════════════════════════ */
+function App(){
+  const init=loadData();
+  const [daily,setDaily]=useState(init.daily);
+  const [weekly,setWeekly]=useState(init.weekly);
+  const [logs,setLogs]=useState(init.logs);
+  const [wlogs,setWlogs]=useState(init.wlogs);
+  const [revEntries,setRevEntries]=useState(init.revEntries||SEED_ENTRIES);
+  const [view,setView]=useState('today');
+  const [addType,setAddType]=useState(null);
+  const [showAddRev,setShowAddRev]=useState(false);
+  const [newName,setNewName]=useState('');
+  const [editId,setEditId]=useState(null);
+  const [editTxt,setEditTxt]=useState('');
+  const [delConf,setDelConf]=useState(null);
+  const [pasteOpen,setPasteOpen]=useState(false);
+  const [pasteTxt,setPasteTxt]=useState('');
+  const [toast,setToast]=useState(null);
+  const [syncStatus,setSyncStatus]=useState('loading');
+  const [xp,setXp]=useState(()=>{try{return parseInt(localStorage.getItem('habitra_xp')||'0',10);}catch(e){return 0;}});
+  const [badges,setBadges]=useState(()=>{try{return JSON.parse(localStorage.getItem('habitra_badges')||'[]');}catch(e){return [];}});
+  const [notifEnabled,setNotifEnabled]=useState(()=>{try{return localStorage.getItem('habitra_notif')==='1';}catch(e){return false;}});
+  const [notifTime,setNotifTime]=useState(()=>{try{return localStorage.getItem('habitra_notif_time')||'09:00';}catch(e){return '09:00';}});
+  const [showInstallBanner,setShowInstallBanner]=useState(false);
+  const [deferredInstallPrompt,setDeferredInstallPrompt]=useState(null);
+  const prevXpRef=useRef(xp);
+  const prevBadgesRef=useRef(badges);
+  const [darkMode,setDarkMode]=useState(()=>{try{return localStorage.getItem('habitra_dark')==='1';}catch(e){return false;}});
+  const [paletteId,setPaletteId]=useState(()=>{try{return localStorage.getItem('habitra_palette')||'classic';}catch(e){return 'classic';}});
+  const [gateDate,setGateDate]=useState(()=>{try{return localStorage.getItem('habitra_gate_date')||'2027-02-01';}catch(e){return '2027-02-01';}});
+  const [studyHours,setStudyHours]=useState(()=>{try{const r=localStorage.getItem('habitra_study_hours');return r?JSON.parse(r):{}}catch(e){return {};}});
+  const [showHoursInput,setShowHoursInput]=useState(false);
+  const [hoursInput,setHoursInput]=useState('');
+  const prevTodayPctRef=useRef(0);
+  const fileRef=useRef(null);
+  applyPalette(paletteId);
+
+  const T=now2();
+  const TK=dk(T.y,T.m,T.d);
+  const CWK=wkKey();
+
+  /* Load from Firebase on first open */
+  useEffect(()=>{
+    if(!window.__FB_LOAD__){setSyncStatus('offline');return;}
+    window.__FB_LOAD__().then(d=>{
+      if(d&&Array.isArray(d.daily)){
+        setDaily(d.daily);
+        if(Array.isArray(d.weekly))setWeekly(d.weekly);
+        if(d.logs&&typeof d.logs==='object')setLogs(d.logs);
+        if(d.wlogs&&typeof d.wlogs==='object')setWlogs(d.wlogs);
+        if(Array.isArray(d.revEntries))setRevEntries(d.revEntries);
+        saveLocal(d);
+      }
+      setSyncStatus('synced');
+    }).catch(()=>setSyncStatus('offline'));
+  },[]);
+
+  /* Auto-save whenever data changes */
+  const isFirstRender=useRef(true);
+  useEffect(()=>{
+    if(isFirstRender.current){isFirstRender.current=false;return;}
+    const data={daily,weekly,logs,wlogs,revEntries};
+    saveLocal(data);
+    if(window.__FB_SAVE__){
+      setSyncStatus('saving');
+      clearTimeout(window._fbTimer);
+      window._fbTimer=setTimeout(()=>{
+        window.__FB_SAVE__(data)
+          .then(()=>setSyncStatus('synced'))
+          .catch(()=>setSyncStatus('offline'));
+      },1500);
+    }
+  },[daily,weekly,logs,wlogs,revEntries]);
+
+  /* Dark mode body class */
+  useEffect(()=>{
+    document.body.classList.toggle('dark',darkMode);
+    try{localStorage.setItem('habitra_dark',darkMode?'1':'0');}catch(e){}
+  },[darkMode]);
+
+  useEffect(()=>{
+    applyPalette(paletteId);
+    try{localStorage.setItem('habitra_palette',paletteId);}catch(e){}
+  },[paletteId]);
+
+  /* PWA install prompt */
+  useEffect(()=>{
+    const handler=e=>{e.preventDefault();setDeferredInstallPrompt(e);setShowInstallBanner(true);};
+    window.addEventListener('beforeinstallprompt',handler);
+    // Also show if in standalone mode check fails
+    const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+    if(!isStandalone)setTimeout(()=>setShowInstallBanner(true),3000);
+    return()=>window.removeEventListener('beforeinstallprompt',handler);
+  },[]);
+
+  /* Swipe gesture handler */
+  const touchStartX=useRef(null);
+  const touchStartY=useRef(null);
+  const handleTouchStart=useCallback(e=>{
+    if(e.target.closest?.('[data-swipe-lock="true"]')){
+      touchStartX.current=null;touchStartY.current=null;return;
+    }
+    touchStartX.current=e.touches[0].clientX;
+    touchStartY.current=e.touches[0].clientY;
+  },[view]);
+  const handleTouchEnd=useCallback(e=>{
+    if(touchStartX.current===null)return;
+    const dx=e.changedTouches[0].clientX-touchStartX.current;
+    const dy=e.changedTouches[0].clientY-touchStartY.current;
+    if(Math.abs(dx)<70||Math.abs(dy)>35)return;
+    const VIEWS=['today','stats','revision','achieve','settings'];
+    const ci=VIEWS.indexOf(view);
+    if(dx<0&&ci<VIEWS.length-1)setView(VIEWS[ci+1]);
+    else if(dx>0&&ci>0)setView(VIEWS[ci-1]);
+    touchStartX.current=null;
+  },[view]);
+
+  /* XP tracking — award XP on habit/revision changes */
+  useEffect(()=>{
+    if(isFirstRender.current)return;
+    let gained=0;
+    // Count all completed habits across all days
+    let totalHabitChecks=0;
+    Object.values(logs).forEach(d=>totalHabitChecks+=Object.values(d).filter(Boolean).length);
+    // Count all completed revisions
+    let totalRevChecks=0;
+    revEntries.forEach(e=>totalRevChecks+=REV_INTERVALS.filter(iv=>e.reviews[String(iv)]===true).length);
+    // Count perfect days
+    let perfectDays=0;
+    Object.keys(logs).forEach(k=>{
+      if(daily.length>0&&daily.every((_,i)=>(logs[k]||{})[i]))perfectDays++;
+    });
+    // Hours XP
+    const totalH=Object.values(studyHours).reduce((a,b)=>a+b,0);
+    // Streak bonus
+    const maxStreak=Math.max(0,...daily.map((_,i)=>getStreak(logs,i)));
+
+    const rawXp=totalHabitChecks*XP_REWARDS.habit+perfectDays*XP_REWARDS.allHabits+
+      totalRevChecks*XP_REWARDS.revision+Math.floor(totalH)*XP_REWARDS.studyHour+
+      (maxStreak>=7?XP_REWARDS.streak7:0)+(maxStreak>=30?XP_REWARDS.streak30:0);
+
+    if(rawXp!==xp){
+      setXp(rawXp);
+      try{localStorage.setItem('habitra_xp',String(rawXp));}catch(e){}
+    }
+
+    // Check badges
+    const newBadges=checkBadges({logs,daily,revEntries,studyHours,xp:rawXp,existing:badges});
+    if(newBadges.length!==badges.length){
+      setBadges(newBadges);
+      try{localStorage.setItem('habitra_badges',JSON.stringify(newBadges));}catch(e){}
+      // Show toast for new badge
+      const newOnes=newBadges.filter(b=>!badges.includes(b));
+      if(newOnes.length>0){
+        const b=ALL_BADGES.find(x=>x.id===newOnes[0]);
+        if(b)setTimeout(()=>toast$(`${b.icon} Badge earned: ${b.name}!`),500);
+      }
+    }
+  },[logs,daily,revEntries,studyHours]);
+
+  /* Confetti when 100% habits done */
+  useEffect(()=>{
+    const pct=daily.length?Math.round(daily.filter((_,i)=>(logs[TK]||{})[i]).length/daily.length*100):0;
+    if(pct===100&&prevTodayPctRef.current<100&&daily.length>0)fireConfetti();
+    prevTodayPctRef.current=pct;
+  },[logs,TK]);
+
+  /* Save study hours to localStorage */
+  useEffect(()=>{try{localStorage.setItem('habitra_study_hours',JSON.stringify(studyHours));}catch(e){}},
+    [studyHours]);
+
+  /* Save gate date */
+  useEffect(()=>{try{localStorage.setItem('habitra_gate_date',gateDate);}catch(e){}},
+    [gateDate]);
+
+  /* Study hours helpers */
+  const todayHours=studyHours[TK]||0;
+  const logHours=()=>{
+    const h=parseFloat(hoursInput);
+    if(isNaN(h)||h<0||h>24){toast$('Enter valid hours (0-24)','err');return;}
+    setStudyHours(p=>({...p,[TK]:h}));
+    setShowHoursInput(false);setHoursInput('');
+    toast$(`Logged ${h}h study time ✅`);
+  };
+  const weekHours=useMemo(()=>{
+    let t=0;
+    for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);
+      const k=dk(d.getFullYear(),d.getMonth(),d.getDate());t+=studyHours[k]||0;}
+    return Math.round(t*10)/10;
+  },[studyHours,TK]);
+  const totalHours=useMemo(()=>Object.values(studyHours).reduce((a,b)=>a+b,0),[studyHours]);
+
+  /* GATE countdown */
+  const gateCountdown=useMemo(()=>{
+    const diff=Math.ceil((new Date(gateDate)-new Date())/(1000*60*60*24));
+    return diff>0?diff:0;
+  },[gateDate]);
+
+  const toast$=(msg,type='ok')=>{setToast({msg,type});setTimeout(()=>setToast(null),2800);};
+
+  /* HABIT TOGGLES */
+  const toggleToday=i=>setLogs(p=>({...p,[TK]:{...(p[TK]||{}),[i]:!(p[TK]||{})[i]}}));
+  const toggleWeekly=i=>setWlogs(p=>({...p,[CWK]:{...(p[CWK]||{}),[i]:!(p[CWK]||{})[i]}}));
+
+  /* REVISION TOGGLE */
+  const toggleRevision=(entryId,interval)=>{
+    setRevEntries(prev=>prev.map(e=>{
+      if(e.id!==entryId)return e;
+      const cur=e.reviews[String(interval)];
+      const next=cur===true?null:true;
+      return{...e,reviews:{...e.reviews,[String(interval)]:next}};
+    }));
+  };
+  const addRevEntry=entry=>{setRevEntries(p=>[entry,...p]);toast$('Session logged ✅');};
+  const deleteRevEntry=id=>{setRevEntries(p=>p.filter(e=>e.id!==id));toast$('Entry deleted','warn');};
+
+  /* HABIT ADD */
+  const doAdd=()=>{
+    const n=newName.trim();if(!n)return;
+    if(addType==='daily')setDaily(p=>[...p,n]);else setWeekly(p=>[...p,n]);
+    setNewName('');setAddType(null);toast$('Added ✅');
+  };
+
+  /* HABIT EDIT */
+  const saveEdit=()=>{
+    if(!editId)return;
+    const n=editTxt.trim();if(!n){setEditId(null);return;}
+    if(editId.type==='daily')setDaily(p=>p.map((h,i)=>i===editId.idx?n:h));
+    else setWeekly(p=>p.map((h,i)=>i===editId.idx?n:h));
+    setEditId(null);setEditTxt('');
+  };
+
+  /* HABIT DELETE */
+  const doDelete=(type,idx)=>{
+    if(type==='daily'){
+      setDaily(p=>p.filter((_,i)=>i!==idx));
+      setLogs(prev=>{
+        const next={};
+        for(const k of Object.keys(prev)){
+          const e=prev[k];const ne={};
+          for(const hi of Object.keys(e)){
+            const h=parseInt(hi,10);
+            if(h<idx)ne[h]=e[hi];else if(h>idx)ne[h-1]=e[hi];
+          }
+          if(Object.keys(ne).length)next[k]=ne;
+        }return next;
+      });
+    }else{setWeekly(p=>p.filter((_,i)=>i!==idx));}
+    setDelConf(null);toast$('Deleted','warn');
+  };
+
+  /* REORDER */
+  const moveH=(type,idx,dir)=>{
+    const ni=idx+dir;
+    if(type==='daily'){
+      if(ni<0||ni>=daily.length)return;
+      setDaily(p=>{const a=[...p];[a[idx],a[ni]]=[a[ni],a[idx]];return a;});
+      setLogs(prev=>{
+        const next={};
+        for(const k of Object.keys(prev)){
+          const e=prev[k];if(!e)continue;
+          const ne={...e};
+          const av=ne[idx],bv=ne[ni];
+          if(av!==undefined)ne[ni]=av;else delete ne[ni];
+          if(bv!==undefined)ne[idx]=bv;else delete ne[idx];
+          next[k]=ne;
+        }return next;
+      });
+    }else{
+      if(ni<0||ni>=weekly.length)return;
+      setWeekly(p=>{const a=[...p];[a[idx],a[ni]]=[a[ni],a[idx]];return a;});
+    }
+  };
+
+  /* BACKUP EXPORT */
+  const doExport=()=>{
+    const json=JSON.stringify({daily,weekly,logs,wlogs,revEntries,v:5,at:new Date().toISOString()},null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`habitra-backup-${TK}.json`;
+    document.body.appendChild(a);a.click();
+    document.body.removeChild(a);URL.revokeObjectURL(url);
+    toast$('Backup downloaded ✅');
+  };
+
+  /* COPY */
+  const doCopy=async()=>{
+    const json=JSON.stringify({daily,weekly,logs,wlogs,revEntries,v:5,at:new Date().toISOString()});
+    try{await navigator.clipboard.writeText(json);toast$('Copied to clipboard ✅');}
+    catch(e){toast$('Copy failed — use Download','warn');}
+  };
+
+  /* RESTORE FILE */
+  const doFileRestore=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(Array.isArray(d.daily))setDaily(d.daily);
+        if(Array.isArray(d.weekly))setWeekly(d.weekly);
+        if(d.logs&&typeof d.logs==='object')setLogs(d.logs);
+        if(d.wlogs&&typeof d.wlogs==='object')setWlogs(d.wlogs);
+        if(Array.isArray(d.revEntries))setRevEntries(d.revEntries);
+        toast$('Data restored ✅');
+      }catch(err){toast$('Invalid file — not a Habitra backup','err');}
+      e.target.value='';
+    };
+    r.onerror=()=>toast$('File read error','err');
+    r.readAsText(f);
+  };
+
+  /* RESTORE PASTE */
+  const doPasteRestore=()=>{
+    try{
+      const d=JSON.parse(pasteTxt.trim());
+      if(Array.isArray(d.daily))setDaily(d.daily);
+      if(Array.isArray(d.weekly))setWeekly(d.weekly);
+      if(d.logs&&typeof d.logs==='object')setLogs(d.logs);
+      if(d.wlogs&&typeof d.wlogs==='object')setWlogs(d.wlogs);
+      if(Array.isArray(d.revEntries))setRevEntries(d.revEntries);
+      toast$('Restored from pasted JSON ✅');
+      setPasteTxt('');setPasteOpen(false);
+    }catch(e){toast$('Invalid JSON','err');}
+  };
+
+  /* DERIVED */
+  const todayDone=daily.filter((_,i)=>(logs[TK]||{})[i]).length;
+  const todayPct=daily.length?Math.round(todayDone/daily.length*100):0;
+  const bestStr=useMemo(()=>Math.max(0,...daily.map((_,i)=>getStreak(logs,i))),[logs,daily]);
+  const avg30=useMemo(()=>daily.length?Math.round(daily.reduce((a,_,i)=>a+getRate(logs,i,30),0)/daily.length):0,[logs,daily]);
+  const dueRevCount=useMemo(()=>getTodayDueEntries(revEntries).length,[revEntries]);
+  const weakSuggestions=useMemo(()=>getWeakSuggestions({revEntries,logs,daily,studyHours}),[revEntries,logs,daily,studyHours]);
+
+  /* NAV ITEMS */
+  const NAV=[
+    ['today',IC.home,'Today'],
+    ['stats',IC.bar,'Stats'],
+    ['revision',IC.book,'Revise'],
+    ['achieve','🏆','Achieve'],
+    ['settings',IC.gear,'More'],
+  ];
+
+  /* Show loading screen while fetching from Firebase */
+  if(syncStatus==='loading'){
+    return(
+      <div style={{minHeight:'100vh',background:BG,display:'flex',flexDirection:'column',
+        alignItems:'center',justifyContent:'center',gap:16}}>
+        <div style={{width:56,height:56,borderRadius:18,
+          background:`linear-gradient(135deg,${P},${P2})`,
+          display:'flex',alignItems:'center',justifyContent:'center',
+          boxShadow:'0 6px 20px rgba(124,77,255,0.4)'}}>
+          <Ico d={IC.flame} s={28} c='#FFF' fill='none'/>
+        </div>
+        <div style={{fontSize:22,fontWeight:900,color:P,letterSpacing:-0.5}}>HABITRA</div>
+        <div style={{fontSize:13,color:TS,fontWeight:600}}>Syncing your data… ☁️</div>
+        <div style={{width:120,height:4,background:OL,borderRadius:2,overflow:'hidden',marginTop:4}}>
+          <div style={{width:'60%',height:'100%',background:`linear-gradient(90deg,${P},${P2})`,
+            borderRadius:2,animation:'slide 1.2s ease-in-out infinite'}}/>
+        </div>
+        <style>{`@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}`}</style>
+      </div>
+    );
+  }
+
+  return(
+    <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
+      style={{minHeight:'100vh',background:darkMode?'#1A1625':BG,paddingBottom:80}}>
+      {darkMode&&<style>{`
+        body{background:#1A1625!important}
+        .dark-card{background:#2D2640!important;border-color:#3D3257!important}
+      `}</style>}
+
+      {/* PWA INSTALL BANNER */}
+      {showInstallBanner&&!window.matchMedia('(display-mode: standalone)').matches&&(
+        <div style={{background:`linear-gradient(90deg,${P},${P2})`,
+          padding:'10px 16px',display:'flex',alignItems:'center',gap:10,
+          position:'sticky',top:0,zIndex:50}}>
+          <span style={{fontSize:20}}>📱</span>
+          <div style={{flex:1,color:'#FFF'}}>
+            <div style={{fontSize:12,fontWeight:800}}>Add HABITRA to Home Screen</div>
+            <div style={{fontSize:10,opacity:0.8}}>Works offline • No app store needed</div>
+          </div>
+          <button onClick={async()=>{
+            if(deferredInstallPrompt){
+              deferredInstallPrompt.prompt();
+              const{outcome}=await deferredInstallPrompt.userChoice;
+              setDeferredInstallPrompt(null);
+            }
+            setShowInstallBanner(false);
+          }} style={{background:'rgba(255,255,255,0.25)',border:'1px solid rgba(255,255,255,0.5)',
+            borderRadius:10,padding:'6px 12px',color:'#FFF',fontWeight:800,fontSize:11,
+            cursor:'pointer',fontFamily:'Nunito,sans-serif',flexShrink:0}}>
+            Install
+          </button>
+          <button onClick={()=>setShowInstallBanner(false)}
+            style={{background:'none',border:'none',color:'rgba(255,255,255,0.7)',
+              fontSize:18,cursor:'pointer',padding:'0 4px',lineHeight:1}}>×</button>
+        </div>
+      )}
+
+      {/* HEADER */}
+      <div style={{background:darkMode?'#2D2640':SUR,padding:'12px 16px 10px',
+        borderBottom:`1px solid ${darkMode?'#3D3257':OL}`,position:'sticky',top:0,zIndex:30,
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+        boxShadow:'0 2px 10px rgba(103,80,164,0.09)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:36,height:36,borderRadius:12,
+            background:`linear-gradient(135deg,${P},${P2})`,
+            display:'flex',alignItems:'center',justifyContent:'center',
+            boxShadow:'0 3px 10px rgba(124,77,255,0.35)'}}>
+            <Ico d={IC.flame} s={18} c='#FFF' fill='none'/>
+          </div>
+          <div>
+            <div style={{fontSize:16,fontWeight:900,color:P,letterSpacing:-0.3}}>HABITRA</div>
+            <div style={{fontSize:10,color:TS,fontWeight:500,marginTop:-1}}>
+              Ananya · GATE 2027
+            </div>
+          </div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:7}}>
+          {view==='today'&&(
+            <div style={{background:PC,borderRadius:20,padding:'5px 11px',
+              fontSize:11,fontWeight:800,color:P}}>
+              {todayDone}/{daily.length}
+            </div>
+          )}
+          {dueRevCount>0&&view==='today'&&(
+            <div style={{background:'#FFF3E0',borderRadius:20,padding:'5px 11px',
+              fontSize:11,fontWeight:800,color:'#E65100',border:'1px solid #FFB74D'}}>
+              🔁 {dueRevCount}
+            </div>
+          )}
+          <div style={{
+              borderRadius:20,padding:'5px 11px',fontSize:11,fontWeight:800,
+              display:'flex',alignItems:'center',gap:5,
+              background:syncStatus==='synced'?'#E8F5E9':syncStatus==='saving'?'#FFF3E0':syncStatus==='loading'?'#EDE7FF':'#FFEBEE',
+              color:syncStatus==='synced'?'#2E7D32':syncStatus==='saving'?'#E65100':syncStatus==='loading'?P:'#B71C1C',
+              border:`1px solid ${syncStatus==='synced'?'#A5D6A7':syncStatus==='saving'?'#FFB74D':syncStatus==='loading'?OL:'#FFCDD2'}`}}>
+            <span>{syncStatus==='synced'?'☁️ Synced':syncStatus==='saving'?'⏳ Saving…':syncStatus==='loading'?'⏳ Loading…':'📴 Offline'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div style={{padding:'14px 14px 0',maxWidth:540,margin:'0 auto'}}>
+
+        {view==='today'&&(
+          <TodayView daily={daily} logs={logs} TK={TK} toggleToday={toggleToday}
+            revEntries={revEntries} onRevToggle={toggleRevision}
+            todayDone={todayDone} todayPct={todayPct}
+            bestStr={bestStr} avg30={avg30}
+            gateCountdown={gateCountdown} gateDate={gateDate}
+            todayHours={todayHours} weekHours={weekHours} totalHours={totalHours}
+            showHoursInput={showHoursInput} setShowHoursInput={setShowHoursInput}
+            hoursInput={hoursInput} setHoursInput={setHoursInput} logHours={logHours}
+            darkMode={darkMode}
+            suggestions={weakSuggestions}
+            xp={xp} badges={badges}/>
+        )}
+        {view==='weekly'&&(
+          <WeeklyView weekly={weekly} wlogs={wlogs} CWK={CWK} toggleWeekly={toggleWeekly}/>
+        )}
+        {view==='revision'&&(
+          <RevisionView entries={revEntries} onToggle={toggleRevision}
+            onDelete={deleteRevEntry} onAdd={addRevEntry}/>
+        )}
+        {view==='stats'&&(
+          <StatsView daily={daily} logs={logs} revEntries={revEntries}/>
+        )}
+        {view==='achieve'&&(
+          <GamificationView xp={xp} badges={badges}
+            daily={daily} logs={logs} revEntries={revEntries} studyHours={studyHours}/>
+        )}
+        {view==='settings'&&(
+          <SettingsView daily={daily} weekly={weekly}
+            setDaily={setDaily} setWeekly={setWeekly}
+            setLogs={setLogs} setRevEntries={setRevEntries}
+            logs={logs} revEntries={revEntries} wlogs={wlogs} setWlogs={setWlogs}
+            addType={addType} setAddType={setAddType}
+            newName={newName} setNewName={setNewName} doAdd={doAdd}
+            editId={editId} setEditId={setEditId} editTxt={editTxt}
+            setEditTxt={setEditTxt} saveEdit={saveEdit}
+            delConf={delConf} setDelConf={setDelConf} doDelete={doDelete}
+            moveH={moveH} pasteOpen={pasteOpen} setPasteOpen={setPasteOpen}
+            pasteTxt={pasteTxt} setPasteTxt={setPasteTxt} doPasteRestore={doPasteRestore}
+            doExport={doExport} doCopy={doCopy} doFileRestore={doFileRestore} fileRef={fileRef}
+            darkMode={darkMode} setDarkMode={setDarkMode}
+            gateDate={gateDate} setGateDate={setGateDate}
+            notifEnabled={notifEnabled} setNotifEnabled={setNotifEnabled}
+            notifTime={notifTime} setNotifTime={setNotifTime}
+            paletteId={paletteId} setPaletteId={setPaletteId}/>
+        )}
+      </div>
+
+      {/* FAB */}
+      {view==='weekly'&&(
+        <button onClick={()=>setAddType('weekly')}
+          style={{position:'fixed',bottom:82,right:16,
+            width:52,height:52,borderRadius:17,
+            background:`linear-gradient(135deg,${P},${P2})`,
+            border:'none',cursor:'pointer',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            boxShadow:'0 6px 20px rgba(103,80,164,0.42)',zIndex:20}}>
+          <Ico d={IC.plus} s={24} c='#FFF'/>
+        </button>
+      )}
+      {view==='revision'&&(
+        <button onClick={()=>setShowAddRev(true)}
+          style={{position:'fixed',bottom:82,right:16,
+            width:52,height:52,borderRadius:17,
+            background:'linear-gradient(135deg,#0097A7,#00BCD4)',
+            border:'none',cursor:'pointer',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            boxShadow:'0 6px 20px rgba(0,151,167,0.42)',zIndex:20}}>
+          <Ico d={IC.plus} s={24} c='#FFF'/>
+        </button>
+      )}
+
+      {/* BOTTOM NAV */}
+      <nav style={{position:'fixed',bottom:0,left:0,right:0,
+        background:darkMode?'rgba(45,38,64,0.97)':'rgba(255,255,255,0.97)',backdropFilter:'blur(12px)',
+        borderTop:`1px solid ${darkMode?'#3D3257':OL}`,display:'flex',zIndex:25,
+        boxShadow:'0 -2px 14px rgba(103,80,164,0.09)',
+        paddingBottom:'env(safe-area-inset-bottom,0px)'}}>
+        {NAV.map(([id,icon,lbl])=>(
+          <button key={id} onClick={()=>setView(id)}
+            style={{flex:1,padding:'8px 2px 6px',background:'none',border:'none',
+              display:'flex',flexDirection:'column',alignItems:'center',gap:2,cursor:'pointer',
+              position:'relative'}}>
+            <div style={{width:40,height:27,borderRadius:14,
+              background:view===id?PC:'transparent',
+              display:'flex',alignItems:'center',justifyContent:'center',
+              transition:'background 0.2s'}}>
+              {typeof icon==='string'&&icon.length<=2?(
+                <span style={{fontSize:15}}>{icon}</span>
+              ):(
+                <Ico d={icon} s={17} c={view===id?P:TS}/>
+              )}
+            </div>
+            <span style={{fontSize:9,fontWeight:view===id?800:500,
+              color:view===id?P:TS,letterSpacing:0.1}}>{lbl}</span>
+            {id==='revision'&&dueRevCount>0&&(
+              <div style={{position:'absolute',top:5,right:'18%',width:14,height:14,
+                borderRadius:'50%',background:'#E65100',
+                display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:8,fontWeight:900,color:'#FFF'}}>{dueRevCount>9?'9+':dueRevCount}</span>
+              </div>
+            )}
+            {id==='achieve'&&(
+              <div style={{position:'absolute',top:4,right:'12%',
+                background:P,borderRadius:8,padding:'1px 5px'}}>
+                <span style={{fontSize:7,fontWeight:900,color:'#FFF'}}>Lv{getLevel(xp)}</span>
+              </div>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      {/* ADD HABIT MODAL */}
+      {addType&&(
+        <BSModal onClose={()=>{setAddType(null);setNewName('');}}>
+          <div style={{fontSize:17,fontWeight:900,color:TX,marginBottom:4}}>
+            Add {addType==='daily'?'Daily Habit':'Weekly Goal'}
+          </div>
+          <div style={{fontSize:12,color:TS,marginBottom:14}}>
+            Tip: start with an emoji 🎯
+          </div>
+          <input autoFocus value={newName}
+            onChange={e=>setNewName(e.target.value)}
+            onKeyDown={e=>{if(e.key==='Enter')doAdd();if(e.key==='Escape'){setAddType(null);setNewName('');}}}
+            placeholder={addType==='daily'?'e.g. 📖 Morning revision 1hr':'e.g. 📋 Full mock test'}
+            style={{width:'100%',border:`2px solid ${OL}`,borderRadius:14,
+              padding:'13px 14px',fontSize:14,color:TX,background:SV,
+              boxSizing:'border-box',fontWeight:600,outline:'none',
+              fontFamily:'Nunito,sans-serif'}}
+            onFocus={e=>e.target.style.borderColor=P}
+            onBlur={e=>e.target.style.borderColor=OL}/>
+          <div style={{display:'flex',gap:9,marginTop:13}}>
+            <button onClick={doAdd}
+              style={{flex:1,padding:'13px',
+                background:`linear-gradient(90deg,${P},${P2})`,
+                border:'none',borderRadius:14,color:'#FFF',
+                fontWeight:900,fontSize:14,cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>
+              Add
+            </button>
+            <button onClick={()=>{setAddType(null);setNewName('');}}
+              style={{flex:1,padding:'13px',background:SV,border:`2px solid ${OL}`,
+                borderRadius:14,color:TM,fontWeight:700,fontSize:14,cursor:'pointer',
+                fontFamily:'Nunito,sans-serif'}}>
+              Cancel
+            </button>
+          </div>
+        </BSModal>
+      )}
+
+      {/* ADD REVISION MODAL */}
+      {showAddRev&&<AddRevisionModal onAdd={addRevEntry} onClose={()=>setShowAddRev(false)}/>}
+
+      {/* DELETE CONFIRM */}
+      {delConf&&(
+        <BSModal onClose={()=>setDelConf(null)}>
+          <div style={{fontSize:17,fontWeight:900,color:'#B71C1C',marginBottom:8}}>Delete habit?</div>
+          <div style={{fontSize:13,color:TM,marginBottom:20,
+            background:'#FFEBEE',borderRadius:12,padding:'12px 14px',lineHeight:1.5}}>
+            <b>"{delConf.type==='daily'?daily[delConf.idx]:weekly[delConf.idx]}"</b><br/>
+            <span style={{color:'#D32F2F',fontSize:12}}>All log history for this habit will be permanently deleted.</span>
+          </div>
+          <div style={{display:'flex',gap:9}}>
+            <button onClick={()=>doDelete(delConf.type,delConf.idx)}
+              style={{flex:1,padding:'13px',background:'#FFCDD2',border:'2px solid #EF9A9A',
+                borderRadius:14,color:'#B71C1C',fontWeight:900,fontSize:14,cursor:'pointer',
+                fontFamily:'Nunito,sans-serif'}}>Delete</button>
+            <button onClick={()=>setDelConf(null)}
+              style={{flex:1,padding:'13px',background:SV,border:`2px solid ${OL}`,
+                borderRadius:14,color:TM,fontWeight:700,fontSize:14,cursor:'pointer',
+                fontFamily:'Nunito,sans-serif'}}>Cancel</button>
+          </div>
+        </BSModal>
+      )}
+
+      {/* TOAST */}
+      {toast&&(
+        <div style={{position:'fixed',top:76,left:'50%',transform:'translateX(-50%)',zIndex:100,
+          background:toast.type==='err'?'#B71C1C':toast.type==='warn'?'#E65100':'#2E7D32',
+          color:'#FFF',borderRadius:22,padding:'10px 22px',
+          fontSize:13,fontWeight:800,whiteSpace:'nowrap',
+          boxShadow:'0 4px 18px rgba(0,0,0,0.18)'}}>
+          {toast.msg}
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+</script>
+</body>
+</html>
